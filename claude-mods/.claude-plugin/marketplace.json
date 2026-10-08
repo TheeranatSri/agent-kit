@@ -1,5 +1,16 @@
 {
   "name": "local-mods",
-  "owner": { "name": "theeranat.sri" },
-  "plugins": [{ "name": "clear-guard", "source": "./clear-guard" }]
+  "owner": {
+    "name": "theeranat.sri"
+  },
+  "plugins": [
+    {
+      "name": "clear-guard",
+      "source": "./clear-guard"
+    },
+    {
+      "name": "wiki-note",
+      "source": "./wiki-note"
+    }
+  ]
 }

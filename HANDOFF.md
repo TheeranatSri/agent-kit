@@ -7,7 +7,12 @@ with `./sync-from-this-machine.sh`, then commit here.
 
 ## Status (rewrite in place)
 
-2026-10-08 night. Next items 2-4 done (user asked): clear-guard reads `.claude/handoff.json` (0.2.0, 9/9 tests),
+2026-10-08 late night. Shared skills `handoff` + `wiki` in `agent-kit/skills`, linked into ~/.claude/skills and
+~/.codex/skills (Codex lists both); mod `wiki-note` (/note + status line) built, tested 8/8, installed. Open: SQLite
+for the io-log (Proposal io-log-store), npd handoff skill name clash. Next: user reviews; then design step 1 caps
+check / step 3.
+
+(previous) 2026-10-08 night. Next items 2-4 done (user asked): clear-guard reads `.claude/handoff.json` (0.2.0, 9/9 tests),
 `project-template/` + `install-project.sh` (handoff skill + hooks, /wiki skill + wiki_lint.py, wiki seed), 15/15 kit
 tests. npd-comparables NOT changed (it works with the defaults). Next: user reviews; then design step 2 (shared skills).
 
@@ -28,16 +33,19 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 | Design draft for review: roles per job (Claude / Codex, Gemini later), token budget, shared brain, harness adapters, data requests | `docs/design.md`; token report `optional/agent-io-log/token_report.py` |
 | clear-guard 0.2.0: log glob + staleMin from the project's `.claude/handoff.json` (default unchanged; a broken config never blocks `/clear`); 9/9 tests | `~/tools/claude-mods` (09afb16), synced to `claude-mods/` |
 | Project template: `.claude/handoff.json` (shared config), generic `/handoff` skill, SessionStart / SessionEnd hooks reading the config (`handoff_config.sh`), `/wiki` skill (query / ingest / lint) + `wiki_lint.py` (stdlib; 0 errors on the npd wiki after 3 rules were loosened to match it), wiki seed `index.md` / `log.md` / `lessons.md`, rules section for CLAUDE.md / AGENTS.md | `project-template/`, `install-project.sh`, `tests/test_project_template.py` (15 tests), README + SETUP "New project" |
+| Shared skills `handoff`, `wiki` (+ `wiki_lint.py`) moved from project-template to `skills/`; install.sh links them for Claude and Codex; linked on this machine by hand (install.sh would replace this machine's live folders) | `skills/` (18d6fd6); Claude lists `wiki`, `codex exec` lists `handoff` + `wiki` |
+| wiki-note mod: `/note <kind>: <title> [-- details]` appends `## [date] kind | title` to the wiki log.md (local date, UTC+7 checked); status line `handoff 12m · wiki 2026-10-07 (37)`, refreshed each minute, `stale` past staleMin; installed user scope | `~/tools/claude-mods/wiki-note` (e861c0d), synced |
+| io-log storage benchmark (JSONL vs SQLite on the real log x1/x10/x100) | `docs/research/io-log-storage.md`, `optional/agent-io-log/bench_storage.py` |
 | Two git identities: gmail by default, company email + `~/.ssh/id_ed25519_cj` under `~/Documents/projects_cj/` (`includeIf`); kit history rewritten to gmail (old in local tag `backup/before-email-rewrite`) | `~/.gitconfig` (backup `.bak-20261008-145721`), `~/.gitconfig-cj`, `~/.ssh/config` |
 
 ## Next
 
 1. User: add the public keys on GitHub (or regenerate keys themselves with a passphrase), then
    `ssh -T git@github.com` and `cd ~/agent-kit && git push -u origin main`.
-2. Open from items 2-4 (not built, ask first, lesson L10): (a) mod `/note` + status line for the wiki (part of
-   proposal knowledge-wiki-v2); (b) move npd-comparables onto the template (`install-project.sh --update`; would
-   replace npd's hooks / handoff skill with the generic ones, npd-specific lines move into `.claude/handoff.json`);
-   (c) `/wiki` and `/handoff` as user-level shared skills instead of per-project copies (fits design step 2).
+2. Open (ask first, lesson L10): (a) Proposal io-log-store (see Decisions); (b) npd-comparables has a project
+   skill `handoff` with the same name as the shared one, so Claude shows only one: delete npd's copy (the shared one
+   does the same with the default paths) and move npd onto the template hooks (`install-project.sh --update`);
+   (c) `origin:` frontmatter on skills (design step 2) not added yet: check first that Codex accepts extra keys.
 3. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
 4. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
 
@@ -52,9 +60,11 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 - Decision: transport | Choice: GitHub private repo, user pushes | By: user
 - Decision: identities | Choice: projects_cj = company email, everything else = gmail; kit history rewritten | By: user
 
+Proposal: io-log-store | Options: A) SQLite only B) JSONL source + incremental index.db C) keep JSONL | Recommend: B | Rationale: reports 100x faster at a year of data, JSONL stays greppable and the db can be rebuilt; write cost +1.5 ms per hook is negligible
+
 ## How to verify
 
-- `claude plugin list | grep clear-guard` (enabled, 0.2.0), `claude plugin test ~/tools/claude-mods/clear-guard` (9 pass)
+- `claude plugin list | grep clear-guard` (enabled, 0.2.0), `claude plugin test ~/tools/claude-mods/clear-guard` (9 pass), `.../wiki-note` (8 pass)
 - `python3 -m unittest discover -s tests` (15 OK); `python3 project-template/.claude/skills/wiki/wiki_lint.py --dir <wiki>`
 - `./install-project.sh <dir> --dry-run` lists what a project would get
 - `./install.sh --dry-run` lists the planned copies / links

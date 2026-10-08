@@ -18,7 +18,7 @@ installs and verifies.
 | Folder | What |
 |---|---|
 | `codex-harness/` | `harness` CLI (Codex as a worker, human review every round), `LESSONS.md`, `docs/harness-overview.html` |
-| `claude-mods/` | clear-guard mod: asks before `/clear` when the project's session log is stale (path from the project's `.claude/handoff.json`); local plugin marketplace |
+| `claude-mods/` | clear-guard mod: asks before `/clear` when the project's session log is stale (path from the project's `.claude/handoff.json`); wiki-note mod: `/note <kind>: <title> [-- details]` appends to the wiki `log.md`, status line shows handoff age + last wiki log date; local plugin marketplace |
 | `skills/` | shared skills `handoff`, `wiki` (+ `wiki_lint.py`): linked into `~/.claude/skills` and `~/.codex/skills`, so Claude and Codex read the same files |
 | `project-template/` | per-project kit: SessionStart / SessionEnd hooks, `.claude/handoff.json`, wiki seed (`index.md`, `log.md`, `lessons.md`), rules section for CLAUDE.md |
 | `install-project.sh` | adds `project-template/` to a project (`--wiki-dir`, `--session-log`, `--update`, `--dry-run`); never replaces your files unless `--update` |

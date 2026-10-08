@@ -80,12 +80,13 @@ else
   echo "MISSING: node (install Node, e.g. via nvm, then run this again)"
 fi
 
-say "Claude Code plugins: codex (OpenAI) + clear-guard (local)"
+say "Claude Code plugins: codex (OpenAI) + clear-guard, wiki-note (local)"
 claude_plugin() { if [ "$DRY" = 1 ] || [ "${SKIP_PLUGINS:-0}" = 1 ]; then echo "DRY: claude plugin $*"; else claude plugin "$@" 2>&1 | tail -2; fi; }
 claude_plugin marketplace add openai/codex-plugin-cc || true
 claude_plugin install codex@openai-codex --scope user || true
 claude_plugin marketplace add "$HOME/tools/claude-mods" || true
 claude_plugin install clear-guard@local-mods --scope user || true
+claude_plugin install wiki-note@local-mods --scope user || true
 
 if [ "$WITH_IO_LOG" = 1 ]; then
   say "optional: agent-io-log hooks (UserPromptSubmit / Stop / SubagentStop)"
@@ -119,7 +120,8 @@ if [ "$DRY" = 1 ]; then echo "DRY: skipped"; exit 0; fi
 case ":$PATH:" in *":$HOME/.local/bin:"*) echo "ok:      ~/.local/bin on PATH" ;;
   *) echo "WARN:    ~/.local/bin not on PATH; add: export PATH=\"\$HOME/.local/bin:\$PATH\"" ;; esac
 if [ "${SKIP_PLUGINS:-0}" != 1 ]; then
-  claude plugin list 2>&1 | grep -E "clear-guard|codex@" || true
+  claude plugin list 2>&1 | grep -E "clear-guard|wiki-note|codex@" || true
   claude plugin test "$HOME/tools/claude-mods/clear-guard" 2>&1 | tail -3 || true
+  claude plugin test "$HOME/tools/claude-mods/wiki-note" 2>&1 | tail -3 || true
 fi
 echo; echo "done. Start a new Claude Code session (or /reload-plugins) to load the plugins."

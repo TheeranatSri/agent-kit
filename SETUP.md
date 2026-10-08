@@ -37,7 +37,7 @@ What it does:
 | shared skills `handoff`, `wiki` (Claude and Codex) | `~/.claude/skills/<name>`, `~/.codex/skills/<name>` | symlink to `agent-kit/skills`, so `git pull` updates both |
 | global rules for Codex | `~/.codex/AGENTS.md` | copy |
 | node for hooks (lesson L16) | `~/.local/bin/node` | symlink to the newest nvm node, if no node link yet |
-| Claude Code plugins | `codex@openai-codex`, `clear-guard@local-mods` (user scope) | `claude plugin install` |
+| Claude Code plugins | `codex@openai-codex`, `clear-guard@local-mods`, `wiki-note@local-mods` (user scope) | `claude plugin install` |
 | optional agent-io-log | `~/tools/agent-io-log` + 3 hooks in `~/.claude/settings.json` | only with `--with-io-log` |
 
 ## 3. Verify and report
@@ -46,7 +46,7 @@ Read the `== checks` part of the output. Expected:
 
 - `ok: harness --help`
 - `ok: ~/.local/bin on PATH` (if WARN: tell the user the exact line to add to their shell profile)
-- `clear-guard@local-mods` and `codex@openai-codex` listed; clear-guard tests `9 pass`
+- `clear-guard@local-mods`, `wiki-note@local-mods` and `codex@openai-codex` listed; clear-guard tests `9 pass`, wiki-note `8 pass`
 - every prerequisite `ok` (if `MISSING: codex` or `node`: tell the user, do not install it yourself)
 
 Then tell the user to start a new Claude Code session (or `/reload-plugins`). Write each result as
