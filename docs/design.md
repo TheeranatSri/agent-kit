@@ -94,33 +94,32 @@ resumes in the same session.
 | 3 company data / paid | BigQuery, Gemini, embeddings | user, with SQL + dry run + cost; or a per-job budget |
 | 4 write outside | push, email, BQ write | never a worker; orchestrator only on the user's order |
 
-### 5.1 Permission profiles per worker / role
+### 5.1 Access is set by the job's scope, not by the model (Decided, user 2026-10-08)
 
-Who may do what is set per worker role, not per model, in `agent-kit/permissions.yaml` (defaults) and overridable in
-a job's task.md. Example:
+Whether a worker may use the internet (or data, or the repo) depends on what the job is, never on which model runs
+it. Each task.md declares its access; presets in `agent-kit/permissions.yaml` save typing:
 
 ```yaml
-profiles:
-  web-researcher:          # e.g. a Sonnet agent today, Gemini later
-    network: direct-read   # may search / fetch public pages itself (level 1)
-    repo: none             # no project files, no data/, no BigQuery credentials
-    writes: [research/]    # findings with citations only
-  data-worker:             # Codex / Claude doing analysis
-    network: request       # levels 1-3 only through requests (section 5)
-    repo: scope            # only the job's --scope
-  orchestrator:
-    network: request
-    repo: all
-    writes_outside: on user order only
+# in task.md
+access:
+  network: none | request | direct-read     # direct-read = may search / fetch public pages itself
+  data: none | snapshots | request          # company data: none, local snapshots only, or via requests
+  repo: none | scope | all
+  writes: [<paths>]
+presets:
+  web-research:  {network: direct-read, data: none, repo: none, writes: [research/]}
+  data-analysis: {network: request, data: snapshots, repo: scope}
+  orchestrate:   {network: request, data: request, repo: all}
 ```
 
-- Rule: **a worker that reads the open internet never also holds company data or credentials** (untrusted content +
-  private data + a way out is the risky mix). Research findings come back as files; the orchestrator treats them as
-  data, checks the sources, and only then uses them.
-- Enforcement per runtime: Claude agents by their `tools:` list (a researcher gets WebSearch / WebFetch / Read /
-  Write, no Bash); Codex by `--sandbox` and its network setting; Gemini by its own sandbox settings (to verify when
-  it is added). The harness refuses a job whose profile and worker settings disagree.
-- The user can change a profile per job (e.g. allow `direct-read` for a data-worker on a docs-only task).
+- The same model can run a `web-research` job in the morning and a `data-analysis` job in the afternoon.
+- Rule: **one job never combines `network: direct-read` with company data or credentials** (untrusted content +
+  private data + a way out is the risky mix). If a task needs both, split it: a research job returns cited files, the
+  orchestrator checks the sources, a data job uses them.
+- Enforcement: the harness maps the job's access to the runtime of whichever model runs it (Claude: allowed
+  tools; Codex: `--sandbox` / network setting; Gemini: its sandbox, verified when added) and refuses a job whose
+  access cannot be enforced on that runtime.
+- The user sets or changes `access` when approving task.md.
 
 **Planning round + budget** for jobs that need data (e.g. a presentation): round 0 returns the plan and ALL data
 requests; one approval; the harness pulls everything; round 1 builds. Optional per-job budget in task.md (tables +
@@ -140,6 +139,6 @@ max GB) lets the orchestrator approve level-3 requests inside it and report afte
 
 ## 7. Open questions for the user
 
-1. worker-network: approve section 5 + permission profiles (5.1)?
+1. worker-network: approve section 5 (requests, 4 levels, planning round + budget)?
 2. Caps: proposed CLAUDE.md <= 120 lines, AGENTS.md <= 120, skill description <= 300 characters. OK?
 3. Triangulation tolerance default (e.g. 0.5% relative, exact for counts)?
