@@ -19,3 +19,8 @@ verified for our setup. Prompts used for Codex runs are in `prompts/` so a run c
   skills, subagents, MCP, harness, scripts (Claude and Codex); 7 ranked candidates for our setup.
 - [TypeSafe AI](typesafe-ai.md): Jev typed decision API (paid, $0.042/M input) with MIT SDKs/skill; community
   Fast Jev Compaction mod prunes tool call/result pairs at 60% context; what to use, copy or skip for our harness.
+- [Harness ideas: Orca + deepseek-harness](harness-ideas-orca-deepseek.md): what to take (bounded output before it
+  enters context, adapter capability checks, inspectable job profiles, diff-anchored feedback), adapt or skip
+  (default fan-out, auto merge chains, file sandbox as network policy).
+- [Decision models](decision-models.md): OpenThai-SystemOne (local, Thai, Apache-2.0, Jev-compatible API), Laya
+  (local, tiny, 1k context), Cloudflare Clef / Clef-flash (open weights, H200-class), TypeSafe Jev (hosted); pilot plan.
