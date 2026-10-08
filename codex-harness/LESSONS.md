@@ -55,7 +55,7 @@ Entry format (keep each under ~8 lines):
 - Cause: `pytest | tail` returns tail's exit code, not pytest's.
 - Fix: check `${PIPESTATUS[0]}` / run without the pipe before committing.
 - Prevent: always read the real exit code before a commit.
-- Seen: 2026-10-06.
+- Seen: 2026-10-06. Again 2026-10-08 (knowledge-index): Codex reported log.md as 135 lines without counting; actual 124.
 
 ## L7. Wrong cause stated as fact   [who: claude] [area: review]
 - Problem: told the user the 0847 miss came from USP length; a test refuted it (real cause: identity text / CDT label).
@@ -134,3 +134,13 @@ Entry format (keep each under ~8 lines):
 - Fix: `ln -s ~/.nvm/versions/node/v24.21.0/bin/node ~/.local/bin/node`; hook script exits 0 under a minimal PATH.
 - Prevent: the link pins v24.21.0; after `nvm install`/removing that version, re-point the link. Any tool a hook needs must be on the Claude process PATH, not only in shell rc files.
 - Seen: 2026-10-08, after /clear.
+
+## L17. Acceptance check passes when git fails, and only works before commit   [who: claude] [area: harness check]
+- Problem: knowledge-index check.py compared note bodies with `git show HEAD:<file>`; if git failed it got an empty
+  string and skipped the body / scope checks (pass). After the orchestrator committed the job, the same check
+  reported FAIL because HEAD now had the frontmatter.
+- Cause (verified): the check used `HEAD` as the baseline and treated empty git output as "nothing to compare".
+- Fix: re-verified against the pre-job commit (`5542896~1`): 0 of 19 bodies changed.
+- Prevent: checks that call git must fail on a non-zero git exit; pin the baseline commit when the job is created
+  (e.g. `BASE=$(git rev-parse HEAD)` written into the check) instead of `HEAD`.
+- Seen: 2026-10-08, knowledge-index (npd-comparables).

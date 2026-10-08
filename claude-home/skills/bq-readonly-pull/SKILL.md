@@ -19,6 +19,11 @@ Pattern scripts (copy, do not re-invent):
 
 ## Procedure
 
+0. **Delegate the drafting** (user decision 2026-10-08): the main session does not read `semantic/` YAML or table
+   metadata. Spawn the project agent `sql-drafter` (default model Sonnet; the model may change later) with the
+   question and the target folder; it writes the `.sql`, dry-runs it and returns a <=15-line summary. If the project
+   has no such agent, use a general-purpose agent with the same instructions. Big multi-query pulls for a Codex job
+   go through harness `data_requests` instead.
 1. Write each query as its own `.sql` file and show the SQL to the user before running (user decision, memory
    v3-prompt-state).
 2. Refuse anything but reads: the script asserts no `INSERT / DELETE / CREATE / UPDATE / MERGE / DROP` word.
