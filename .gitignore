@@ -4,3 +4,4 @@ __pycache__/
 .harness/
 node_modules/
 .claude-plugin/types/
+evals/*/local/

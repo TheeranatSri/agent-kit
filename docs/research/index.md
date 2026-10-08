@@ -24,3 +24,5 @@ verified for our setup. Prompts used for Codex runs are in `prompts/` so a run c
   (default fan-out, auto merge chains, file sandbox as network policy).
 - [Decision models](decision-models.md): OpenThai-SystemOne (local, Thai, Apache-2.0, Jev-compatible API), Laya
   (local, tiny, 1k context), Cloudflare Clef / Clef-flash (open weights, H200-class), TypeSafe Jev (hosted); pilot plan.
+- [Decision models: test contract](decision-models-spec.md): exact request/response of OpenThai (Ollama) and Laya
+  multilingual (MLX), a common one-question case format, token limits, Mac speed / RAM protocol.
