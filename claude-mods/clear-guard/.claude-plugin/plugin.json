@@ -1,1 +1,1 @@
-{ "name": "clear-guard", "version": "0.1.0", "description": "Asks before /clear when the project's session log has not been updated recently (run /handoff first)." }
+{ "name": "clear-guard", "version": "0.2.0", "description": "Asks before /clear when the project's session log has not been updated recently (run /handoff first). Log path from .claude/handoff.json." }

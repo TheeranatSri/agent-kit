@@ -1,0 +1,6 @@
+{
+  "sessionLog": "notebooks/knowledge/session-log-*.md",
+  "staleMin": 30,
+  "wikiDir": "notebooks/knowledge",
+  "lessons": ["notebooks/knowledge/lessons.md", "~/tools/codex-harness/LESSONS.md"]
+}

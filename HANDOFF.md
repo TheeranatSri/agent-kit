@@ -7,7 +7,11 @@ with `./sync-from-this-machine.sh`, then commit here.
 
 ## Status (rewrite in place)
 
-2026-10-08 evening. docs/design.md reviewed and decided. Next: step 2 (shared skills in agent-kit/skills, linked for Claude and Codex, test with Codex) in a NEW session.
+2026-10-08 night. Next items 2-4 done (user asked): clear-guard reads `.claude/handoff.json` (0.2.0, 9/9 tests),
+`project-template/` + `install-project.sh` (handoff skill + hooks, /wiki skill + wiki_lint.py, wiki seed), 15/15 kit
+tests. npd-comparables NOT changed (it works with the defaults). Next: user reviews; then design step 2 (shared skills).
+
+(previous) 2026-10-08 evening. docs/design.md reviewed and decided. Next: step 2 (shared skills in agent-kit/skills, linked for Claude and Codex, test with Codex) in a NEW session.
 
 (previous) 2026-10-08 ~15:30. Kit built and committed (no push yet: SSH keys made, user adds them on GitHub / may regenerate
 them). Next: mod changes driven by use cases found while working in npd-comparables.
@@ -22,19 +26,20 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 | agent-kit repo: harness, LESSONS, clear-guard, global CLAUDE.md / AGENTS.md, 4 user skills, optional agent-io-log, `install.sh` (tested in a fake HOME, idempotent), `SETUP.md` for Claude, sync script (file copy) | `~/agent-kit`; remote `git@github.com:TheeranatSri/agent-kit.git` |
 | Research notes (Sonnet, sources checked): LLM wiki (Karpathy gist 2026-04-04) and Orca (stablyai/orca) | `docs/research/llm-wiki.md`, `docs/research/orca.md` |
 | Design draft for review: roles per job (Claude / Codex, Gemini later), token budget, shared brain, harness adapters, data requests | `docs/design.md`; token report `optional/agent-io-log/token_report.py` |
+| clear-guard 0.2.0: log glob + staleMin from the project's `.claude/handoff.json` (default unchanged; a broken config never blocks `/clear`); 9/9 tests | `~/tools/claude-mods` (09afb16), synced to `claude-mods/` |
+| Project template: `.claude/handoff.json` (shared config), generic `/handoff` skill, SessionStart / SessionEnd hooks reading the config (`handoff_config.sh`), `/wiki` skill (query / ingest / lint) + `wiki_lint.py` (stdlib; 0 errors on the npd wiki after 3 rules were loosened to match it), wiki seed `index.md` / `log.md` / `lessons.md`, rules section for CLAUDE.md / AGENTS.md | `project-template/`, `install-project.sh`, `tests/test_project_template.py` (15 tests), README + SETUP "New project" |
 | Two git identities: gmail by default, company email + `~/.ssh/id_ed25519_cj` under `~/Documents/projects_cj/` (`includeIf`); kit history rewritten to gmail (old in local tag `backup/before-email-rewrite`) | `~/.gitconfig` (backup `.bak-20261008-145721`), `~/.gitconfig-cj`, `~/.ssh/config` |
 
 ## Next
 
 1. User: add the public keys on GitHub (or regenerate keys themselves with a passphrase), then
    `ssh -T git@github.com` and `cd ~/agent-kit && git push -u origin main`.
-2. Mod use cases from npd work. Candidate: clear-guard reads the log location from a per-project config
-   (e.g. `.claude/clear-guard.json`) instead of the hardcoded `notebooks/knowledge/session-log-*`.
-3. Put the generic `/handoff` skill and SessionStart / SessionEnd hooks (now in npd-comparables `.claude/`) into
-   `agent-kit/project-template/`; npd keeps its own copy.
-4. Knowledge wiki (Proposal knowledge-wiki-v2, awaiting user A/B): index.md + log.md in notebooks/knowledge (no file moves), CLAUDE.md rule, /wiki skill (ingest/query/lint), mod /note + status line; generic, template in the kit.
-5. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
-6. After each change: tests, `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
+2. Open from items 2-4 (not built, ask first, lesson L10): (a) mod `/note` + status line for the wiki (part of
+   proposal knowledge-wiki-v2); (b) move npd-comparables onto the template (`install-project.sh --update`; would
+   replace npd's hooks / handoff skill with the generic ones, npd-specific lines move into `.claude/handoff.json`);
+   (c) `/wiki` and `/handoff` as user-level shared skills instead of per-project copies (fits design step 2).
+3. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
+4. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
 
 ## Decisions
 
@@ -49,6 +54,8 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 ## How to verify
 
-- `claude plugin list | grep clear-guard` (enabled), `claude plugin test ~/tools/claude-mods/clear-guard` (5 pass)
+- `claude plugin list | grep clear-guard` (enabled, 0.2.0), `claude plugin test ~/tools/claude-mods/clear-guard` (9 pass)
+- `python3 -m unittest discover -s tests` (15 OK); `python3 project-template/.claude/skills/wiki/wiki_lint.py --dir <wiki>`
+- `./install-project.sh <dir> --dry-run` lists what a project would get
 - `./install.sh --dry-run` lists the planned copies / links
 - `git -C ~/agent-kit log --format=%ae | sort -u` = gmail only

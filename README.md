@@ -18,7 +18,10 @@ installs and verifies.
 | Folder | What |
 |---|---|
 | `codex-harness/` | `harness` CLI (Codex as a worker, human review every round), `LESSONS.md`, `docs/harness-overview.html` |
-| `claude-mods/` | clear-guard mod: asks before `/clear` when the project's session log is stale; local plugin marketplace |
+| `claude-mods/` | clear-guard mod: asks before `/clear` when the project's session log is stale (path from the project's `.claude/handoff.json`); local plugin marketplace |
+| `project-template/` | per-project kit: `/handoff` + `/wiki` skills, SessionStart / SessionEnd hooks, `.claude/handoff.json`, wiki seed (`index.md`, `log.md`, `lessons.md`), rules section for CLAUDE.md |
+| `install-project.sh` | adds `project-template/` to a project (`--wiki-dir`, `--session-log`, `--update`, `--dry-run`); never replaces your files unless `--update` |
+| `tests/` | `python3 -m unittest discover -s tests` (installer, hooks, wiki lint) |
 | `claude-home/` | global `CLAUDE.md` (Claims, roles, handoff, structured lines) and user skills |
 | `codex-home/` | global `AGENTS.md` for Codex |
 | `optional/agent-io-log/` | logs prompts/answers + structured lines to `~/agent-io-logs/`; installed only with `--with-io-log` |

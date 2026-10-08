@@ -45,7 +45,7 @@ Read the `== checks` part of the output. Expected:
 
 - `ok: harness --help`
 - `ok: ~/.local/bin on PATH` (if WARN: tell the user the exact line to add to their shell profile)
-- `clear-guard@local-mods` and `codex@openai-codex` listed; clear-guard tests `5 pass`
+- `clear-guard@local-mods` and `codex@openai-codex` listed; clear-guard tests `9 pass`
 - every prerequisite `ok` (if `MISSING: codex` or `node`: tell the user, do not install it yourself)
 
 Then tell the user to start a new Claude Code session (or `/reload-plugins`). Write each result as
@@ -58,6 +58,22 @@ Then tell the user to start a new Claude Code session (or `/reload-plugins`). Wr
 - Skills `bq-readonly-pull`, `excel-review-workbook`, `paid-run-gate` point at the npd-comparables project under
   `~/Documents/projects_cj/npd-comparables`; they only matter on a machine that has that project.
 - Project files (each project's CLAUDE.md / AGENTS.md / lessons / `.claude/` hooks) come with that project's repo.
+  To give a project the handoff + wiki setup, see "New project" below.
+
+## New project: handoff hooks + knowledge wiki
+
+When the user wants the handoff / wiki setup in a project (ask for the wiki folder; default `notebooks/knowledge`):
+
+```bash
+~/agent-kit/install-project.sh <project-dir> --dry-run [--wiki-dir docs/knowledge] [--session-log 'docs/session-log-*.md']
+~/agent-kit/install-project.sh <project-dir> [same options]
+```
+
+Show the dry run first. It adds `.claude/skills/{handoff,wiki}`, `.claude/hooks/*.sh`, `.claude/handoff.json` (read
+by clear-guard too), the SessionStart / SessionEnd hooks in `.claude/settings.json` (merged, backup kept), wiki seed
+pages, the rules section at the end of CLAUDE.md (and AGENTS.md if present), and `.claude/handoff-auto/` in
+`.gitignore`. Files the project already has are kept (reported as `differs`); `--update` replaces them with a backup.
+The user reviews `git status` and commits in the project.
 
 ## Updating later
 
