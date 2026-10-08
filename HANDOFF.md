@@ -18,6 +18,7 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 | Codex plugin hook error `node: command not found`: symlink `~/.local/bin/node` -> nvm v24.21.0 | lesson L16, `~/tools/codex-harness` (038a3d1) |
 | harness overview page: clear-guard + handoff hooks, new-machine setup, L16, comparison with Orca (stablyai/orca) | `docs/harness-overview.html` (f763fba, 55feb4c); https://claude.ai/artifact/TqWopdKeyhpaABLygWJQjk |
 | agent-kit repo: harness, LESSONS, clear-guard, global CLAUDE.md / AGENTS.md, 4 user skills, optional agent-io-log, `install.sh` (tested in a fake HOME, idempotent), `SETUP.md` for Claude, sync script (file copy) | `~/agent-kit`; remote `git@github.com:TheeranatSri/agent-kit.git` |
+| Research notes (Sonnet, sources checked): LLM wiki (Karpathy gist 2026-04-04) and Orca (stablyai/orca) | `docs/research/llm-wiki.md`, `docs/research/orca.md` |
 | Two git identities: gmail by default, company email + `~/.ssh/id_ed25519_cj` under `~/Documents/projects_cj/` (`includeIf`); kit history rewritten to gmail (old in local tag `backup/before-email-rewrite`) | `~/.gitconfig` (backup `.bak-20261008-145721`), `~/.gitconfig-cj`, `~/.ssh/config` |
 
 ## Next
@@ -28,7 +29,8 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
    (e.g. `.claude/clear-guard.json`) instead of the hardcoded `notebooks/knowledge/session-log-*`.
 3. Put the generic `/handoff` skill and SessionStart / SessionEnd hooks (now in npd-comparables `.claude/`) into
    `agent-kit/project-template/`; npd keeps its own copy.
-4. After each change: tests, `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
+4. Knowledge wiki (Proposal knowledge-wiki-v2, awaiting user A/B): index.md + log.md in notebooks/knowledge (no file moves), CLAUDE.md rule, /wiki skill (ingest/query/lint), mod /note + status line; generic, template in the kit.
+5. After each change: tests, `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
 
 ## Decisions
 
