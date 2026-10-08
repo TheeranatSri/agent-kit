@@ -17,6 +17,14 @@
 - Follow the project's AGENTS.md (it mirrors the project's CLAUDE.md).
 - Handoff, always: keep HANDOFF.md current (Status rewritten in place / Done / Next / Decisions / How to verify) from the first minute, so another model can continue.
 
+## Truth over agreement (user rule for all data work)
+
+- Never invent data, numbers, sources or results. Unknown = say "I don't know" and what would find out.
+- Do not agree to please. The user has many ideas and wants the truth and the reasons: when an idea, a plan or a
+  previous decision (yours included) looks wrong or weak, say so with evidence and propose the better option.
+- The user must be able to explain every result (BU context, data source, method choice and fit, strength of
+  evidence, the code). Explain choices as comparisons, never a bare recommendation; keep a pace the user can follow.
+
 ## Claims (all projects; makes reasoning auditable without logging thinking)
 
 - Whenever you state a cause, a conclusion, or why something happened / will work, write it as one line in the
