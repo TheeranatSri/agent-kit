@@ -166,3 +166,12 @@ Entry format (keep each under ~8 lines):
 - Prevent: when a generic version replaces a working project script, run both on a clone of the real project
   (same inputs, edge cases such as stale / fresh) and diff the outputs before switching.
 - Seen: 2026-10-08, npd-comparables move to the agent-kit template.
+
+## L20. `codex exec --search` is not an exec option   [who: claude] [area: codex-cli]
+- Problem: two research runs exited 2 at once (`unexpected argument '--search'`); a round of waiting lost.
+- Cause (verified): `--search` belongs to the top-level `codex` command (`codex --search exec ...`); I read only a
+  grep of `codex exec --help`, where the word appeared in another option's text.
+- Fix: `codex --search exec --skip-git-repo-check -s read-only -m ... -o out.md -`.
+- Prevent: before a background Codex run, smoke-test the exact argv in the foreground with a trivial prompt (or
+  `--help` of the exact subcommand, read in full); harness jobs have no network, so web research uses this form.
+- Seen: 2026-10-08, context-tools / mods research.
