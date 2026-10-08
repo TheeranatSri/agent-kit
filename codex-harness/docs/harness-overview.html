@@ -173,6 +173,7 @@ footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--li
     <a href="#lessons">วงจรการเรียนรู้</a>
     <a href="#lines">Structured lines</a>
     <a href="#case">กรณีศึกษา</a>
+    <a href="#compare">เทียบกับ Orca</a>
     <a href="#start">เริ่ม job</a>
   </nav>
 </header>
@@ -555,9 +556,59 @@ footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--li
   <p class="callout"><b>สิ่งที่ได้เรียนรู้:</b> รอบ 1 ใช้เวลานานกว่าเพราะ <code>task.md</code> ไม่ได้กำหนดขนาด ไม่ใช่เพราะ Codex ทำงานช้า พอรอบ 2 ระบุนาที จำนวนไฟล์ จำนวนแถว และความยาวสรุปไว้ชัดเจน งานจึงจบในเวลาและรีวิวได้ ตอนนี้กติกานี้อยู่ใน L13 แล้ว</p>
 </section>
 
-<!-- 7. Cheat sheet -->
+<!-- 7. Comparison -->
+<section id="compare">
+  <div class="eyebrow">7 · Comparison</div>
+  <h2>เทียบกับ Orca (stablyai/orca)</h2>
+  <p>เมื่อพูดถึง Orca ที่ใช้ Claude และ Codex ด้วยกัน โปรเจกต์หลักคือ <code>stablyai/orca</code> ของ Stably AI (MIT) เป็น desktop app ที่รัน agent หลายตัวพร้อมกัน แต่ละตัวอยู่ใน git worktree ของตัวเอง ยังมี repo ชื่อ Orca อื่นอีกหลายตัว (<code>cco</code>, <code>orca-cli/orca</code>, <code>fmfsaisai/orca</code>) แต่เล็กกว่ามาก ข้อมูลด้านล่างเป็นของ <code>stablyai/orca</code> เว้นแต่ระบุไว้</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Orca</th><th>codex-harness (ของเรา)</th></tr></thead>
+      <tbody>
+        <tr><td>เป้าหมาย</td><td>พื้นที่ทำงานที่รัน agent หลายตัวขนานกัน</td><td>ส่งงานชิ้นเดียวให้ Codex แบบควบคุมได้และมีคนรีวิว</td></tr>
+        <tr><td>ใครสั่งงาน</td><td>user หรือ coordinator agent (skill ทดลอง)</td><td>main Claude session; operator (Opus) รัน CLI</td></tr>
+        <tr><td>ใครลงมือ</td><td>CLI agent ใดก็ได้ (Claude, Codex และอื่นๆ กว่า 25 ตัว)</td><td>Codex <code>gpt-6.1-sol</code> ตัวเดียว</td></tr>
+        <tr><td>ขนาน</td><td>หลาย agent พร้อมกัน, ส่ง prompt เดียวให้หลายตัวแล้วเทียบผล</td><td>หนึ่ง worker ต่อ job, ทำทีละรอบ</td></tr>
+        <tr><td>การแยกงาน</td><td>git worktree ต่อ agent</td><td>sandbox <code>workspace-write</code> ไม่มี network และเขียนได้เฉพาะ <code>--scope</code></td></tr>
+        <tr><td>จุดรีวิวโดยคน</td><td>ดู diff, คอมเมนต์รายบรรทัด, สั่งต่อจากมือถือ (ใช้เมื่อต้องการ)</td><td>ทุกรอบ: accept / feedback / reject</td></tr>
+        <tr><td>การ commit</td><td>user commit ในแอป (agent commit เองได้หรือไม่ ยังไม่ยืนยัน)</td><td>เฉพาะ main session; harness และ Codex ไม่ commit</td></tr>
+        <tr><td>state / handoff</td><td>worktree, scrollback, สถานะ unread; task DAG ใน orchestration skill</td><td><code>HANDOFF.md</code> ทุกชั้น, <code>state.json</code>, <code>rounds/</code>, <code>commands.log</code></td></tr>
+        <tr><td>learning loop</td><td>ไม่พบ (ยังไม่ยืนยัน)</td><td><code>LESSONS.md</code> ส่ง Prevent line เข้า prompt ถัดไป + retro ทุก job</td></tr>
+        <tr><td>การเข้าถึงข้อมูล</td><td>agent ใช้ tool และ network ของตัวเอง</td><td>ไม่มี network; ขอผ่าน <code>data_requests</code> แล้วคนอนุมัติ SQL</td></tr>
+        <tr><td>setup</td><td>ติดตั้ง Electron app (macOS, Windows, Linux, มือถือ)</td><td>ไฟล์ Python ไฟล์เดียว ใช้ stdlib อย่างเดียว</td></tr>
+        <tr><td>ความสมบูรณ์</td><td>ประมาณ 87k stars, ออก release ทุกวัน (v1.4.222)</td><td>เครื่องมือส่วนตัว ทดสอบกับ job ไม่กี่งาน</td></tr>
+        <tr><td>เหมาะกับ</td><td>งานขนานหลายชิ้น และเทียบผลระหว่าง agent</td><td>งานข้อมูลที่ต้องตรวจสอบได้และจำกัดผลกระทบ</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>สิ่งที่ยืมมาได้</h3>
+      <ul>
+        <li>git worktree ต่อ job เพื่อรัน Codex หลาย job ขนานกันโดยไม่ชนกัน</li>
+        <li>คอมเมนต์รายบรรทัดบน diff แล้วส่งเข้า <code>harness feedback</code></li>
+        <li>แยกสถานะรอเป็นสามแบบ: เสร็จ / รอคำตอบ / ค้าง ตอนนี้เรามี <code>needs_input</code> แต่ตรวจ "ค้าง" ได้แค่จากอายุของ HANDOFF</li>
+        <li>task DAG สำหรับแตก job ใหญ่เป็น job ย่อยที่ต่อกัน</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>จุดที่ของเราตั้งใจให้ต่าง</h3>
+      <ul>
+        <li>คนตัดสินทุกรอบ ไม่มี coordinator ที่ merge เอง</li>
+        <li>commit ได้ที่เดียว คือ main session</li>
+        <li>worker ไม่มี network; ข้อมูลมาหลังคนอนุมัติ SQL เท่านั้น</li>
+        <li>lessons ถูกฉีดกลับเข้า prompt อัตโนมัติ และ <code>Claim</code> / <code>Check</code> ตรวจย้อนหลังได้</li>
+        <li>ไม่มี dependency และ state เป็นไฟล์ ให้ model ตัวไหนมารับช่วงต่อก็ได้</li>
+      </ul>
+    </div>
+  </div>
+  <p class="callout"><b>สรุป:</b> Orca เก่งเรื่องความเร็วและการรันขนาน ส่วน harness เก่งเรื่องการควบคุมและการตรวจสอบย้อนหลัง สองแบบไม่ได้แทนกัน ถ้าต้องการรันหลาย job ขนาน ให้ยืมแนวคิด worktree มาก่อน ส่วนกติกา review และ commit ยังคงเดิม</p>
+  <p class="small muted">แหล่งข้อมูล: <a href="https://github.com/stablyai/orca">stablyai/orca</a> · <a href="https://www.onorca.dev/">onorca.dev</a> · <a href="https://github.com/stablyai/orca/discussions/681">discussion #681 (coordinator)</a> · <a href="https://github.com/Gabriel-Dalton/claude-codex-orchestrator">claude-codex-orchestrator</a> · <a href="https://github.com/orca-cli/orca">orca-cli/orca</a> · <a href="https://github.com/fmfsaisai/orca">fmfsaisai/orca</a> · ข้อมูล orchestration skill มาจากรายการของบุคคลที่สาม (ยังไม่ยืนยัน) และไม่พบข้อมูลเรื่อง telemetry ที่ละเอียดพอ (ยังไม่ยืนยัน)</p>
+</section>
+
+<!-- 8. Cheat sheet -->
 <section id="start">
-  <div class="eyebrow">7 · Cheat sheet</div>
+  <div class="eyebrow">8 · Cheat sheet</div>
   <h2>เริ่ม job ใหม่</h2>
   <p>ก่อนรัน <code>new</code> ต้องถาม user ก่อนว่าต้องการอะไร: path ที่ Codex เขียนได้, ไฟล์ส่งมอบ, ขีดจำกัด (นาที, จำนวนไฟล์, ขนาด output) แล้วจึงเขียน <code>task.md</code> และ check ที่ exit 0 เฉพาะเมื่องานถูกต้อง ค่า default คือ model <code>gpt-6.1-sol</code>, effort <code>medium</code> (ใช้ <code>--effort high</code> กับงานออกแบบที่ยาก) และสูงสุด 5 รอบ (env <code>HARNESS_MODEL</code>, <code>HARNESS_EFFORT</code>)</p>
   <div class="code"><button class="copy" type="button" id="copy-start">Copy</button><pre><code><span class="c"># once per project: .harness/ + "Lessons and multi-model work" section in CLAUDE.md / AGENTS.md</span>
@@ -624,7 +675,7 @@ claude plugin install clear-guard@local-mods --scope user</code></pre></div>
 
 <footer>
   <span>ที่มา: <code>~/tools/codex-harness/</code> (README.md, harness.py, LESSONS.md), codex-harness skill, <code>~/.claude/CLAUDE.md</code> และไฟล์ใน <code>.harness/</code> ของ job <code>cdt-drift-analysis</code> (2026-10-08)</span>
-  <span>อัปเดต 2026-10-08 บ่าย: เพิ่ม clear-guard mod, hooks ของ handoff, หัวข้อตั้งเครื่องใหม่ และ L16 (node PATH)</span>
+  <span>อัปเดต 2026-10-08 บ่าย: เพิ่ม clear-guard mod, hooks ของ handoff, หัวข้อตั้งเครื่องใหม่ และ L16 (node PATH) · เพิ่มส่วนเทียบกับ Orca (ข้อมูล GitHub ณ 2026-10-08)</span>
   <span>สถานะ job ณ วันที่เขียน: <code>state.json</code> = <code>awaiting_review</code> หลังรอบ 2 (main session แนะนำให้ accept แต่ยังไม่ได้รัน <code>harness accept</code>)</span>
 </footer>
 </div>
