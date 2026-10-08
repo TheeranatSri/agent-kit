@@ -7,10 +7,12 @@ with `./sync-from-this-machine.sh`, then commit here.
 
 ## Status (rewrite in place)
 
-2026-10-08 ~18:00. npd-comparables moved to the template hooks + shared /handoff (npd 2ea64c1; old vs new hook
-output diffed on a clone, equal except the added wiki line); L19 (log picked by mtime) fixed in hooks + mods.
-io-log: Decision io-log-store = B, built next as a Codex job once the user OKs the scope (draft in Next 2a).
-Skill sets: Proposal skill-sets waiting for the user.
+2026-10-08 ~19:00, nothing running. Principles recorded (design.md s.0): ultimate goal = Orca-like harness for data
+analytics, human pace, understanding first, truth over agreement (also in global CLAUDE.md / AGENTS.md). Research
+(Codex gpt-6.1-sol low, web): docs/research/{context-tools-oss,mods-vs-mechanisms,typesafe-ai}.md + index.md.
+Job io-index drafted in .harness/drafts/io-index (task.md, check.sh, fixture) but PARKED: Claude pushed back (index not
+needed yet; work order puts it 4th). NEXT: user answers Open 1-3, then draft task for work-order step 1 (`access` /
+network per job in harness) and show the scope before creating the job. Push still blocked: GitHub repo missing.
 
 (previous) 2026-10-08 late night. Shared skills `handoff` + `wiki` in `agent-kit/skills`, linked into ~/.claude/skills and
 ~/.codex/skills (Codex lists both); mod `wiki-note` (/note + status line) built, tested 8/8, installed. Open: SQLite
@@ -45,15 +47,24 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 ## Next
 
-1. User: add the public keys on GitHub (or regenerate keys themselves with a passphrase), then
-   `ssh -T git@github.com` and `cd ~/agent-kit && git push -u origin main`.
-2. Open: (a) io-log index (Decision io-log-store B): Codex job, scope to confirm with the user: `io_index.py`
-   (incremental SQLite from the JSONL, schema v1 with real columns, `export` to CSV + `schema.sql` for a later
-   migration), `token_report.py` on the index with output equal to the JSONL scan; work in `~/agent-kit/optional/
-   agent-io-log` (git repo), then copy kit -> `~/tools/agent-io-log` (the sync script copies the other way and
-   would overwrite); (b) Proposal skill-sets; (c) `origin:` frontmatter on skills (design step 2) not added yet: check first that Codex accepts extra keys.
-3. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
-4. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
+1. User: create the private repo `agent-kit` on github.com (empty, no README), then
+   `cd ~/agent-kit && git push -u origin main` (SSH works: `ssh -T git@github.com` authenticates as TheeranatSri).
+2. Open, waiting for the user (Claude's push-back 2026-10-08, rule truth-over-agreement):
+   1. io-index: keep parked and start work-order step 1 first? (Claude: yes; JSONL scan is 59 ms today.)
+   2. skill-sets B: test first whether claude.ai-synced skills (papercut, gouache, line-*) can be turned off per
+      project; if not, B gives only order, and A is cheaper. Claim B saves design-skill tokens: hypothesis.
+   3. Orca goal: take the single review place + worktree isolation, not many agents in parallel by default
+      (human pace). Write this into design.md section 0 once the user agrees.
+3. Work order (Decision work-order): 1) `access` / network per job in harness (design 5.1; today all jobs have no
+   network, web research ran outside the harness with `codex --search exec -s read-only ... -o out.md -`, lesson L20)
+   2) `harness --worker claude` 3) bounded review packets with the understanding section (design s.0)
+   4) io-index (job drafted). One job at a time; ask the scope before each job.
+4. io-index check.sh: the dry run did not finish in >5 min and was stopped, so the check is NOT yet proven to fail
+   before the work; make it faster (fewer modes per run or a smaller fixture) and dry-run it before the job.
+5. Codex research open questions (verbatim in the research notes): external-classifier (may text go to TypeSafe?),
+   continuity-policy, reset-threshold, output-budget, routing-quality.
+6. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`,
+   `./sync-from-this-machine.sh`, commit here.
 
 ## Decisions
 
