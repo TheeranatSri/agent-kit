@@ -93,3 +93,12 @@ Entry format (keep each under ~8 lines):
 - Prevent: quote the delimiter (`<<'EOF'`) whenever the body contains backticks or `$`; read the shell's stderr
   even when the script prints "ok".
 - Seen: 2026-10-08, handoff rule edit.
+
+## L12. git blocked by the Xcode license (no sudo)   [who: both] [area: git]
+- Problem: every git command failed: "You have not agreed to the Xcode license agreements"; the user has no sudo.
+- Cause: /usr/bin/git is a shim that uses the selected developer dir (Xcode.app), whose license was reset (likely an
+  Xcode update).
+- Fix: `export DEVELOPER_DIR=/Library/Developer/CommandLineTools` (Command Line Tools git, no license prompt).
+- Prevent: if git fails with the Xcode license message, use DEVELOPER_DIR=/Library/Developer/CommandLineTools;
+  never ask for sudo first.
+- Seen: 2026-10-08.
