@@ -1,0 +1,654 @@
+<title>Codex Harness Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one reading column (max 980px), wide diagrams scroll inside their own box; role colours carry meaning everywhere:
+   amber = human decision, violet = Claude (orchestrator / operator), teal = Codex worker. */
+:root {
+  --bg: #f4f6f5;
+  --surface: #ffffff;
+  --ink: #17201d;
+  --muted: #56645f;
+  --line: #d3dbd8;
+  --code-bg: #e9eeec;
+  --human: #a8580a;
+  --human-soft: #fbefdf;
+  --claude: #6847a3;
+  --claude-soft: #efe9f8;
+  --codex: #0c6e66;
+  --codex-soft: #e1f2ef;
+  --ok: #2c7a3f;
+  --bad: #b3261e;
+  --font-body: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111614; --surface: #1a201e; --ink: #e5ebe8; --muted: #9eaaa5; --line: #2f3936; --code-bg: #212927;
+    --human: #f2a54d; --human-soft: #3a2a17; --claude: #b9a0ec; --claude-soft: #2a2238;
+    --codex: #57c9ba; --codex-soft: #14302c; --ok: #6cc884; --bad: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111614; --surface: #1a201e; --ink: #e5ebe8; --muted: #9eaaa5; --line: #2f3936; --code-bg: #212927;
+  --human: #f2a54d; --human-soft: #3a2a17; --claude: #b9a0ec; --claude-soft: #2a2238;
+  --codex: #57c9ba; --codex-soft: #14302c; --ok: #6cc884; --bad: #ff8a80; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 16px; line-height: 1.7; margin: 0;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 64px; display: grid; gap: 56px; }
+h1, h2, h3 { line-height: 1.25; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.9rem); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 1.55rem; font-weight: 700; }
+h3 { font-size: 1.08rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+:not(pre) > code { background: var(--code-bg); padding: 0.05em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+a { color: var(--claude); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--claude); outline-offset: 2px; }
+section { display: grid; gap: 18px; min-width: 0; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lead { font-size: 1.12rem; color: var(--ink); }
+.muted { color: var(--muted); }
+.small { font-size: 0.9rem; }
+
+/* hero */
+header.hero { display: grid; gap: 18px; padding-block-end: 8px; border-bottom: 1px solid var(--line); padding-bottom: 28px; }
+.chain { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.92rem; }
+.chain .arrow { color: var(--muted); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; border: 1px solid; font-weight: 600; white-space: nowrap; }
+.pill.human { color: var(--human); background: var(--human-soft); border-color: var(--human); }
+.pill.claude { color: var(--claude); background: var(--claude-soft); border-color: var(--claude); }
+.pill.codex { color: var(--codex); background: var(--codex-soft); border-color: var(--codex); }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.9rem; }
+nav.toc a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--line); }
+nav.toc a:hover { color: var(--ink); }
+
+/* diagrams */
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; height: auto; color: var(--muted); }
+.diagram.wide svg { min-width: 820px; }
+.diagram.roles svg { min-width: 560px; max-width: 760px; margin: 0 auto; }
+figcaption { font-size: 0.9rem; color: var(--muted); max-width: 75ch; }
+svg text { font-family: var(--font-body); fill: var(--ink); }
+svg .t-mono { font-family: var(--font-mono); }
+svg .t-muted { fill: var(--muted); }
+svg .t-human { fill: var(--human); }
+svg .t-claude { fill: var(--claude); }
+svg .t-codex { fill: var(--codex); }
+svg .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+svg .box-human { fill: var(--human-soft); stroke: var(--human); stroke-width: 1.5; }
+svg .box-claude { fill: var(--claude-soft); stroke: var(--claude); stroke-width: 1.5; }
+svg .box-codex { fill: var(--codex-soft); stroke: var(--codex); stroke-width: 1.5; }
+svg .edge { stroke: var(--muted); stroke-width: 1.4; fill: none; }
+svg .edge-human { stroke: var(--human); stroke-width: 1.6; fill: none; }
+svg .edge-dash { stroke: var(--claude); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+svg .head { fill: var(--muted); }
+svg .head-human { fill: var(--human); }
+svg .head-claude { fill: var(--claude); }
+svg .sandbox { fill: none; stroke: var(--codex); stroke-width: 1.2; stroke-dasharray: 4 4; }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+tr:last-child td { border-bottom: 0; }
+thead th { font-size: 0.8rem; color: var(--muted); font-weight: 600; background: var(--bg); }
+td.num, th.num { font-variant-numeric: tabular-nums; }
+.yes { color: var(--ok); font-weight: 600; }
+.no { color: var(--bad); font-weight: 600; }
+.matrix td:not(:first-child), .matrix th:not(:first-child) { min-width: 130px; }
+.matrix td:first-child { min-width: 200px; font-weight: 500; }
+th.c-human { color: var(--human); } th.c-claude { color: var(--claude); } th.c-codex { color: var(--codex); }
+
+/* lists, cards */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.panel ul, .panel ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.callout { border-left: 3px solid var(--human); background: var(--human-soft); padding: 12px 16px; border-radius: 0 8px 8px 0; max-width: 78ch; }
+
+/* file tree */
+.tree { display: grid; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.tree .row { display: grid; grid-template-columns: minmax(0, 290px) 110px minmax(0, 1fr); gap: 4px 14px; padding: 8px 14px; border-bottom: 1px solid var(--line); align-items: baseline; }
+.tree .row:last-child { border-bottom: 0; }
+.tree .path { font-family: var(--font-mono); font-size: 0.84rem; overflow-wrap: anywhere; }
+.tree .who { font-size: 0.78rem; font-weight: 600; }
+.tree .what { font-size: 0.9rem; color: var(--muted); }
+.tree .d1 { padding-left: 1.4em; } .tree .d2 { padding-left: 2.8em; }
+.who.human { color: var(--human); } .who.claude { color: var(--claude); } .who.codex { color: var(--codex); } .who.tool { color: var(--muted); }
+@media (max-width: 640px) {
+  .tree .row { grid-template-columns: 1fr; }
+  .tree .d1, .tree .d2 { padding-left: 0; }
+}
+
+/* learning loop steps */
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; counter-reset: s; }
+ol.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; font-size: 0.9rem; min-width: 0; }
+ol.steps li::before { content: counter(s); font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+ol.steps li b { font-size: 0.95rem; }
+
+/* structured lines */
+.lines { display: grid; gap: 12px; }
+.line { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 6px 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+.line:first-child { border-top: 0; }
+.line .tag { font-family: var(--font-mono); font-weight: 600; font-size: 0.9rem; }
+.line .ex { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); padding: 8px 10px; border-radius: 6px; overflow-wrap: anywhere; }
+.line .use { font-size: 0.9rem; color: var(--muted); }
+.line .body { display: grid; gap: 6px; min-width: 0; }
+@media (max-width: 640px) { .line { grid-template-columns: 1fr; } }
+
+/* code blocks */
+.code { position: relative; background: var(--code-bg); border-radius: 10px; border: 1px solid var(--line); min-width: 0; }
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 0.82rem; line-height: 1.65; }
+.code .c { color: var(--muted); }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 0.75rem var(--font-body); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; cursor: pointer; }
+.copy:hover { border-color: var(--claude); }
+
+.stat-row { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.9rem; }
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <div class="eyebrow">codex-harness · knowledge transfer</div>
+  <h1>Codex Harness Workflow</h1>
+  <p class="lead">Claude Opus เป็นผู้ประสานงาน (orchestrator) Codex (<code>gpt-6.1-sol</code>) เป็นคนลงมือทำงานใน sandbox และคนตรวจงาน (User) ตัดสินใจทุกรอบ harness จะไม่ commit เองและไม่ retry อัตโนมัติ ทุกรอบต้องหยุดรอคนตรวจ</p>
+  <div class="chain" aria-label="Role chain">
+    <span class="pill human">User</span><span class="arrow">→</span>
+    <span class="pill claude">Main Claude session</span><span class="arrow">→</span>
+    <span class="pill claude">Harness operator (Opus)</span><span class="arrow">→</span>
+    <span class="pill codex">Codex worker</span>
+  </div>
+  <nav class="toc" aria-label="Sections">
+    <a href="#roles">บทบาทและสิทธิ์</a>
+    <a href="#lifecycle">วงจรของหนึ่ง job</a>
+    <a href="#files">ไฟล์และ handoff</a>
+    <a href="#lessons">วงจรการเรียนรู้</a>
+    <a href="#lines">Structured lines</a>
+    <a href="#case">กรณีศึกษา</a>
+    <a href="#start">เริ่ม job</a>
+  </nav>
+</header>
+
+<!-- 1. Roles -->
+<section id="roles">
+  <div class="eyebrow">1 · Roles and layers</div>
+  <h2>สี่ชั้น สี่บทบาท ใครทำอะไรได้บ้าง</h2>
+  <p>แต่ละชั้นคุยกับชั้นที่ติดกันเท่านั้น คำสั่งไหลลง รายงานสั้นๆ ไหลขึ้น main session ไม่อ่าน <code>codex.log</code> เอง (ไฟล์ใหญ่หลาย MB และกิน context) แต่ให้ operator อ่านแล้วสรุปไม่เกิน 20 บรรทัด (LESSONS L9)</p>
+  <figure>
+    <div class="diagram roles">
+      <svg viewBox="0 0 680 470" role="img" aria-label="Four layers: User decides, main Claude session relays and commits, harness operator runs the harness CLI, Codex works inside a workspace-write sandbox. Decisions flow down, short reports flow up.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+          <marker id="arh" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-human"/></marker>
+        </defs>
+        <!-- boxes -->
+        <rect x="40" y="16" width="600" height="68" rx="8" class="box-human"/>
+        <text x="60" y="44" font-size="16" font-weight="700" class="t-human">User</text>
+        <text x="60" y="68" font-size="12.5">reviews every round · decides feedback / accept / reject · answers Codex questions</text>
+        <text x="620" y="44" font-size="11" text-anchor="end" class="t-mono t-muted">human</text>
+
+        <rect x="40" y="136" width="600" height="68" rx="8" class="box-claude"/>
+        <text x="60" y="164" font-size="16" font-weight="700" class="t-claude">Main Claude session (orchestrator)</text>
+        <text x="60" y="188" font-size="12.5">plans task.md with the user · relays decisions · runs tests · commits</text>
+        <text x="620" y="164" font-size="11" text-anchor="end" class="t-mono t-muted">Claude Opus</text>
+
+        <rect x="40" y="256" width="600" height="68" rx="8" class="box-claude"/>
+        <text x="60" y="284" font-size="16" font-weight="700" class="t-claude">Harness operator</text>
+        <text x="60" y="308" font-size="12.5">runs the harness CLI · verifies results · writes orchestrator_review.md</text>
+        <text x="620" y="284" font-size="11" text-anchor="end" class="t-mono t-muted">Opus agent, background</text>
+
+        <rect x="28" y="364" width="624" height="96" rx="10" class="sandbox"/>
+        <text x="640" y="452" font-size="10.5" text-anchor="end" class="t-mono t-codex">workspace-write sandbox · no network</text>
+        <rect x="40" y="376" width="600" height="62" rx="8" class="box-codex"/>
+        <text x="60" y="402" font-size="16" font-weight="700" class="t-codex">Codex worker</text>
+        <text x="60" y="425" font-size="12.5">writes only --scope + HANDOFF.md · never commits · ends with JSON result</text>
+        <text x="620" y="402" font-size="11" text-anchor="end" class="t-mono t-muted">gpt-6.1-sol · medium</text>
+
+        <!-- down arrows (left) -->
+        <line x1="110" y1="84" x2="110" y2="134" class="edge-human" marker-end="url(#arh)"/>
+        <text x="122" y="114" font-size="12" class="t-human">feedback / accept / reject</text>
+        <line x1="110" y1="204" x2="110" y2="254" class="edge" marker-end="url(#ar)"/>
+        <text x="122" y="234" font-size="12">relays the user's decision</text>
+        <line x1="110" y1="324" x2="110" y2="374" class="edge" marker-end="url(#ar)"/>
+        <text x="122" y="354" font-size="12" class="t-mono">harness run / feedback</text>
+        <!-- up arrows (right) -->
+        <line x1="570" y1="134" x2="570" y2="84" class="edge" marker-end="url(#ar)"/>
+        <text x="558" y="114" font-size="12" text-anchor="end">short report + questions</text>
+        <line x1="570" y1="254" x2="570" y2="204" class="edge" marker-end="url(#ar)"/>
+        <text x="558" y="234" font-size="12" text-anchor="end">≤ 20-line summary</text>
+        <line x1="570" y1="374" x2="570" y2="324" class="edge" marker-end="url(#ar)"/>
+        <text x="558" y="354" font-size="12" text-anchor="end" class="t-mono">result.json · HANDOFF.md</text>
+      </svg>
+    </div>
+    <figcaption>การตัดสินใจไหลลงจาก User เท่านั้น ส่วนรายงานไหลขึ้นทีละชั้น Codex อยู่ใน sandbox แบบ <code>workspace-write</code> ไม่มี network จึงคุยกับ BigQuery หรือถามคำถามกลางรอบไม่ได้</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+    <table class="matrix">
+      <thead><tr>
+        <th>การกระทำ</th>
+        <th class="c-human">User</th>
+        <th class="c-claude">Main session</th>
+        <th class="c-claude">Operator</th>
+        <th class="c-codex">Codex</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>กำหนด scope ของ job (path ที่เขียนได้, ขนาดรอบ)</td><td class="yes">ตัดสิน</td><td>ถาม user ก่อน แล้วเขียน task.md</td><td class="no">ไม่</td><td class="no">ไม่</td></tr>
+        <tr><td>ตัดสิน feedback / accept / reject</td><td class="yes">ตัดสิน</td><td>ส่งต่อให้ operator</td><td>รันคำสั่งเมื่อได้รับคำตัดสินที่ส่งต่อมาเท่านั้น</td><td class="no">ไม่</td></tr>
+        <tr><td>ตอบคำถาม <code>needs_input</code> ของ Codex</td><td class="yes">ตอบเอง</td><td>ส่งคำถามให้ user แบบคำต่อคำ ห้ามตอบแทน</td><td class="no">ห้ามตอบแทน</td><td>ถามได้ตอนจบรอบเท่านั้น</td></tr>
+        <tr><td>รัน <code>harness</code> CLI</td><td>ได้ (เช่น <code>monitor</code>)</td><td>ใช้ <code>status</code></td><td class="yes">หน้าที่หลัก</td><td class="no">ไม่</td></tr>
+        <tr><td>อ่าน <code>codex.log</code></td><td>—</td><td class="no">ไม่อ่าน (L9)</td><td class="yes">ได้</td><td>เขียนออกมา</td></tr>
+        <tr><td>เขียนไฟล์ในโปรเจกต์</td><td>—</td><td>task.md, check, session log, lessons</td><td>ไฟล์ review ใน <code>.harness/</code></td><td>เฉพาะ <code>--scope</code> + HANDOFF.md</td></tr>
+        <tr><td>git commit</td><td>—</td><td class="yes">คนเดียวที่ commit</td><td class="no">ห้าม</td><td class="no">ห้าม</td></tr>
+        <tr><td>ดึงข้อมูล BigQuery</td><td>อนุมัติ SQL</td><td>dry run แล้วดึงแบบ read-only หลัง user อนุมัติ</td><td class="no">ห้ามรัน BQ</td><td class="no">ห้าม: ยื่น <code>data_requests</code> แทน</td></tr>
+        <tr><td>เขียน lessons</td><td>ทบทวน</td><td>อนุมัติและ commit</td><td>ร่าง entry</td><td>ร่างใน HANDOFF "Lessons (draft)" ห้ามแก้ไฟล์ lessons</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <h3>เมื่อ Codex ต้องการข้อมูลที่ไม่มี: ช่อง data_requests</h3>
+    <ol>
+      <li>Codex จบรอบด้วย <code>status: needs_input</code> และใส่ SQL แบบ read-only (SELECT / WITH หนึ่ง statement) ใน <code>data_requests</code> พร้อม purpose, tables, expected_rows</li>
+      <li>Operator รัน <code>harness data &lt;job&gt;</code> ซึ่งตรวจ SQL แบบ static: SELECT/WITH เดียว = OK, มี INSERT / UPDATE / DELETE / MERGE / CREATE / DROP / ALTER / TRUNCATE หรือหลาย statement = REJECT, อย่างอื่นที่แปลก = FLAG</li>
+      <li>Main session แสดง SQL ให้ user ดู พออนุมัติแล้วจึง dry run (ดู bytes) แล้วดึงแบบ read-only เป็น parquet/csv</li>
+      <li><code>harness data &lt;job&gt; --done file.parquet --note "..."</code> คัดลอกไฟล์ไปที่ <code>jobs/&lt;job&gt;/data/</code> แล้วปลุก Codex ใน session เดิม (นับเป็นหนึ่งรอบ)</li>
+    </ol>
+  </div>
+</section>
+
+<!-- 2. Lifecycle -->
+<section id="lifecycle">
+  <div class="eyebrow">2 · Lifecycle of one job</div>
+  <h2>วงจรของหนึ่ง job: จาก scope ถึง lesson</h2>
+  <p>ทุกกล่องสีเหลืองอำพันคือจุดที่คนต้องตัดสินใจ ชื่อในตัว mono คือคำสั่งหรือ status จริงใน <code>harness.py</code> ถ้าส่ง feedback งานจะกลับไปที่ Codex ใน session เดิม (<code>codex exec resume</code> กับ <code>session_id</code> เดิม) Codex จึงจำงานรอบก่อนได้</p>
+  <figure>
+    <div class="diagram wide">
+      <svg viewBox="0 0 900 340" role="img" aria-label="Job lifecycle. Top row: user scope, task.md and check.sh, harness new (created), harness run (running), Codex round, check.sh, awaiting_review. Bottom row right to left: operator review, user decides; feedback loops back to the Codex round via codex exec resume; accept or reject closes the job, then harness lessons writes retro.md, then curated lessons go to LESSONS.md, which is injected into the next job's first prompt.">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+          <marker id="a2h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-human"/></marker>
+          <marker id="a2c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-claude"/></marker>
+        </defs>
+        <!-- top row nodes (y 40..96) -->
+        <rect x="16" y="40" width="104" height="56" rx="7" class="box-human"/>
+        <text x="68" y="63" font-size="12.5" font-weight="600" text-anchor="middle" class="t-human">User scope</text>
+        <text x="68" y="82" font-size="11" text-anchor="middle">paths · limits</text>
+
+        <rect x="140" y="40" width="104" height="56" rx="7" class="box-claude"/>
+        <text x="192" y="63" font-size="12" font-weight="600" text-anchor="middle" class="t-mono">task.md</text>
+        <text x="192" y="82" font-size="11" text-anchor="middle" class="t-mono">+ check.sh</text>
+
+        <rect x="264" y="40" width="104" height="56" rx="7" class="box-claude"/>
+        <text x="316" y="63" font-size="11.5" font-weight="600" text-anchor="middle" class="t-mono">harness new</text>
+        <text x="316" y="82" font-size="11" text-anchor="middle" class="t-mono t-muted">created</text>
+
+        <rect x="388" y="40" width="104" height="56" rx="7" class="box-claude"/>
+        <text x="440" y="63" font-size="11.5" font-weight="600" text-anchor="middle" class="t-mono">harness run</text>
+        <text x="440" y="82" font-size="11" text-anchor="middle" class="t-mono t-muted">running</text>
+
+        <rect x="512" y="40" width="104" height="56" rx="7" class="box-codex"/>
+        <text x="564" y="63" font-size="12.5" font-weight="600" text-anchor="middle" class="t-codex">Codex round</text>
+        <text x="564" y="82" font-size="11" text-anchor="middle" class="t-mono">HANDOFF.md</text>
+
+        <rect x="636" y="40" width="104" height="56" rx="7" class="box"/>
+        <text x="688" y="63" font-size="12" font-weight="600" text-anchor="middle" class="t-mono">check.sh</text>
+        <text x="688" y="82" font-size="11" text-anchor="middle">exit 0 = pass</text>
+
+        <rect x="760" y="40" width="124" height="56" rx="7" class="box"/>
+        <text x="822" y="63" font-size="11" font-weight="600" text-anchor="middle" class="t-mono">awaiting_review</text>
+        <text x="822" y="82" font-size="11" text-anchor="middle" class="t-mono">review.md</text>
+        <text x="822" y="114" font-size="10" text-anchor="middle" class="t-mono t-muted">or needs_input · blocked</text>
+        <text x="822" y="127" font-size="10" text-anchor="middle" class="t-mono t-muted">failed · error</text>
+
+        <!-- top row edges -->
+        <line x1="120" y1="68" x2="138" y2="68" class="edge" marker-end="url(#a2)"/>
+        <line x1="244" y1="68" x2="262" y2="68" class="edge" marker-end="url(#a2)"/>
+        <line x1="368" y1="68" x2="386" y2="68" class="edge" marker-end="url(#a2)"/>
+        <line x1="492" y1="68" x2="510" y2="68" class="edge" marker-end="url(#a2)"/>
+        <line x1="616" y1="68" x2="634" y2="68" class="edge" marker-end="url(#a2)"/>
+        <line x1="740" y1="68" x2="758" y2="68" class="edge" marker-end="url(#a2)"/>
+        <text x="564" y="30" font-size="10.5" text-anchor="middle" class="t-mono t-muted">codex exec</text>
+
+        <!-- down to operator review -->
+        <line x1="822" y1="134" x2="822" y2="226" class="edge" marker-end="url(#a2)"/>
+
+        <!-- bottom row nodes (y 228..284) -->
+        <rect x="736" y="228" width="150" height="56" rx="7" class="box-claude"/>
+        <text x="811" y="251" font-size="12.5" font-weight="600" text-anchor="middle" class="t-claude">Operator review</text>
+        <text x="811" y="270" font-size="10.5" text-anchor="middle" class="t-mono">orchestrator_review.md</text>
+
+        <rect x="548" y="228" width="150" height="56" rx="7" class="box-human"/>
+        <text x="623" y="251" font-size="12.5" font-weight="600" text-anchor="middle" class="t-human">User decides</text>
+        <text x="623" y="270" font-size="10.5" text-anchor="middle">feedback · accept · reject</text>
+
+        <rect x="370" y="228" width="140" height="56" rx="7" class="box-claude"/>
+        <text x="440" y="251" font-size="11" font-weight="600" text-anchor="middle" class="t-mono">harness accept</text>
+        <text x="440" y="270" font-size="10.5" text-anchor="middle" class="t-mono t-muted">accepted | rejected</text>
+        <text x="440" y="304" font-size="10.5" text-anchor="middle" class="t-muted">orchestrator commits outside</text>
+
+        <rect x="200" y="228" width="140" height="56" rx="7" class="box-claude"/>
+        <text x="270" y="251" font-size="11" font-weight="600" text-anchor="middle" class="t-mono">harness lessons</text>
+        <text x="270" y="270" font-size="10.5" text-anchor="middle" class="t-mono">retro.md</text>
+
+        <rect x="16" y="228" width="150" height="56" rx="7" class="box-claude"/>
+        <text x="91" y="251" font-size="12" font-weight="600" text-anchor="middle" class="t-mono">LESSONS.md</text>
+        <text x="91" y="270" font-size="10.5" text-anchor="middle">curated · committed</text>
+
+        <!-- bottom row edges (right to left) -->
+        <line x1="736" y1="256" x2="700" y2="256" class="edge" marker-end="url(#a2)"/>
+        <line x1="548" y1="256" x2="512" y2="256" class="edge-human" marker-end="url(#a2h)"/>
+        <text x="530" y="246" font-size="10" text-anchor="middle" class="t-human">accept</text>
+        <line x1="370" y1="256" x2="342" y2="256" class="edge" marker-end="url(#a2)"/>
+        <line x1="200" y1="256" x2="168" y2="256" class="edge" marker-end="url(#a2)"/>
+
+        <!-- feedback loop: user decides -> codex round (same session) -->
+        <path d="M623 228 V 168 H 564 V 98" class="edge-human" marker-end="url(#a2h)"/>
+        <text x="632" y="186" font-size="11" class="t-human t-mono">harness feedback</text>
+        <text x="632" y="201" font-size="10.5" class="t-human">codex exec resume · same session</text>
+
+        <!-- lessons injected into next job's first prompt -->
+        <path d="M91 228 V 150 H 440 V 98" class="edge-dash" marker-end="url(#a2c)"/>
+        <text x="200" y="143" font-size="10.5" class="t-claude">LESSONS block → first prompt of the next job</text>
+      </svg>
+    </div>
+    <figcaption>Status ทั้งหมดใน <code>state.json</code>: created → running → awaiting_review | needs_input | blocked | failed | error → (feedback) running … → accepted | rejected ถ้า worker ที่รันเบื้องหลังตายไป status จะเป็น <code>error</code> ส่วน <code>max_rounds</code> ตั้งต้นที่ 5</figcaption>
+  </figure>
+  <div class="grid2">
+    <div class="panel">
+      <h3>ในหนึ่งรอบ <code>harness</code> ทำอะไร</h3>
+      <ul>
+        <li>เขียน <code>rounds/&lt;n&gt;/prompt.md</code> (รอบแรกเป็น HARNESS RULES + LESSONS block + task.md ส่วนรอบถัดไปเป็นข้อความ feedback)</li>
+        <li>รัน <code>codex exec</code> (รอบ 1) หรือ <code>codex exec resume &lt;session_id&gt;</code> พร้อม <code>--output-schema</code> แล้วเก็บ log ทั้งหมดไว้ใน <code>codex.log</code></li>
+        <li>รัน <code>bash check.sh</code> จาก root ของโปรเจกต์ แล้วบันทึกลง <code>check.txt</code> และ <code>check_command.json</code></li>
+        <li>ตั้ง status: ถ้า codex exit ≠ 0 หรือไม่มี result = <code>error</code>, worker ส่ง done = <code>awaiting_review</code>, นอกนั้นใช้ status ที่ worker ส่งมา แล้วเขียน <code>review.md</code> และแจ้งเตือนบน macOS</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>กติกาที่ Codex ได้รับทุก job</h3>
+      <ul>
+        <li>เขียนได้เฉพาะ path ใน <code>--scope</code> และ HANDOFF.md ห้าม commit / push ไม่มี network</li>
+        <li>สร้าง HANDOFF.md ก่อนเริ่มงานอื่น ส่วน <code>## Status</code> ต้องเป็นบรรทัดเดียวที่เขียนทับทุกครั้ง</li>
+        <li>ถามกลางรอบไม่ได้ ให้บันทึกสมมติฐานแล้วจบรอบด้วย <code>needs_input</code> + <code>questions</code></li>
+        <li>ข้อความสุดท้ายต้องเป็น JSON: <code>status</code> (done | needs_input | blocked | failed), <code>summary</code>, <code>files</code>, <code>questions</code>, <code>next</code>, <code>data_requests</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 3. Files -->
+<section id="files">
+  <div class="eyebrow">3 · Files and handoff</div>
+  <h2>ทุกอย่างอยู่ใน <code>.harness/</code></h2>
+  <p><code>.harness/</code> ถูกเพิ่มลง <code>.git/info/exclude</code> จึงไม่เข้า git ตัวอย่างด้านล่างมาจาก job จริง <code>cdt-drift-analysis</code> ในโปรเจกต์ npd-comparables</p>
+  <div class="tree" role="list">
+    <div class="row" role="listitem"><span class="path">.harness/</span><span class="who tool">harness init</span><span class="what">โฟลเดอร์สถานะของทุก job</span></div>
+    <div class="row d1" role="listitem"><span class="path">commands.log</span><span class="who tool">harness</span><span class="what">หนึ่งบรรทัด JSON ต่อการเรียก <code>harness</code> หนึ่งครั้ง: ts, argv, cwd, actor (<code>HARNESS_ACTOR</code> = user | orchestrator | operator), job, exit_code, duration_s, stdout/stderr</span></div>
+    <div class="row d1" role="listitem"><span class="path">OPERATOR_HANDOFF.md</span><span class="who claude">operator</span><span class="what">handoff ของ operator: Status, คิวงานจาก orchestrator, Done, Next, การตัดสินใจที่รอ user</span></div>
+    <div class="row d1" role="listitem"><span class="path">result_schema.json</span><span class="who tool">harness</span><span class="what">schema ของ JSON สุดท้ายที่ Codex ต้องส่ง (<code>--output-schema</code>)</span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/task.md</span><span class="who claude">orchestrator</span><span class="what">โจทย์: เป้าหมาย, inputs, output paths, กฎโปรเจกต์, สิ่งที่ห้ามแตะ และขีดจำกัด (L13)</span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/check.sh</span><span class="who claude">orchestrator</span><span class="what">acceptance check ที่รันหลังทุกรอบ exit 0 = ผ่าน เช่น ไฟล์ส่งมอบต้องไม่ว่าง, script รันซ้ำได้, <code>git diff --quiet -- src configs</code></span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/state.json</span><span class="who tool">harness</span><span class="what">status, model, effort, scope, <code>session_id</code> ของ Codex, round, history (นาที, codex_rc, check_rc, worker_status ต่อรอบ)</span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/HANDOFF.md</span><span class="who codex">Codex</span><span class="what">Status (บรรทัดเดียว) / Done / Next / Files / Decisions &amp; assumptions / Open issues / How to verify / Lessons (draft)</span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/data/</span><span class="who claude">orchestrator</span><span class="what">ข้อมูลที่ดึงให้ตาม <code>data_requests</code> แล้วส่งเข้ามาด้วย <code>harness data --done</code></span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/retro.md</span><span class="who tool">harness lessons</span><span class="what">ร่าง retrospective: ข้อเท็จจริงต่อรอบ และ Lessons (draft) ของ worker</span></div>
+    <div class="row d1" role="listitem"><span class="path">jobs/&lt;job&gt;/rounds/&lt;n&gt;/</span><span class="who tool">harness</span><span class="what">หนึ่งโฟลเดอร์ต่อรอบ</span></div>
+    <div class="row d2" role="listitem"><span class="path">prompt.md</span><span class="who tool">harness</span><span class="what">สิ่งที่ส่งให้ Codex ทาง stdin</span></div>
+    <div class="row d2" role="listitem"><span class="path">command.json · check_command.json</span><span class="who tool">harness</span><span class="what">argv ที่รันจริง, model, effort, sandbox, session_id, เวอร์ชัน codex, sha256 ของ prompt และ check, เวลาเริ่ม/จบ, exit code</span></div>
+    <div class="row d2" role="listitem"><span class="path">codex.log</span><span class="who tool">harness</span><span class="what">output ทั้งหมดของ Codex (รอบ 1 ของ drift job 6.5 MB, รอบ 2 1.3 MB) operator อ่านได้ แต่ main session ไม่อ่าน</span></div>
+    <div class="row d2" role="listitem"><span class="path">result.json</span><span class="who codex">Codex</span><span class="what">JSON สุดท้ายตาม schema</span></div>
+    <div class="row d2" role="listitem"><span class="path">check.txt · review.md</span><span class="who tool">harness</span><span class="what">ผล check และ review packet: summary, คำถาม, ไฟล์, check, Commands, HANDOFF ทั้งไฟล์ และคำสั่งที่ใช้ตอบกลับได้</span></div>
+    <div class="row d1" role="listitem"><span class="path">orchestrator_review.md · feedback_r2.md · lessons_curation.md</span><span class="who claude">operator / main</span><span class="what">ไฟล์ที่ใช้กันใน drift job แต่ harness ไม่ได้สร้างให้: review ที่ verify แล้วพร้อมข้อเสนอ, ข้อความ feedback (ส่งด้วย <code>-f</code>) และตาราง keep/merge/drop ของ lesson drafts</span></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h3>ทำไมต้องมี handoff</h3>
+      <p>ถ้า model ตัวไหนหยุดกลางทาง เช่น token หมด process ตาย หรือ session ถูกปิด อีกตัวต้องรับงานต่อได้ทันทีจากไฟล์ โดยไม่ต้องเดาจากความจำ จึงมี handoff ทุกชั้น และแต่ละไฟล์ใช้หัวข้อเดียวกัน: Status (หนึ่งบรรทัดปัจจุบัน) / Done / Next / Decisions &amp; open questions / How to verify</p>
+      <ul>
+        <li>Main session: <code>notebooks/knowledge/session-log-&lt;date&gt;.md</code></li>
+        <li>Operator: <code>.harness/OPERATOR_HANDOFF.md</code></li>
+        <li>Codex: <code>.harness/jobs/&lt;job&gt;/HANDOFF.md</code></li>
+        <li>Claude agent ที่รันเบื้องหลัง: ไฟล์ที่ระบุไว้ใน prompt</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>รับงานต่อจาก model อื่น</h3>
+      <ol>
+        <li>อ่าน <code>state.json</code> (session id, round) และหัวข้อ Next ใน <code>HANDOFF.md</code></li>
+        <li>ถ้าจะทำต่อใน Codex ใช้ <code>harness feedback &lt;job&gt; "…"</code> (resume session เดิม)</li>
+        <li>ถ้าจะให้ model อื่นทำ ส่ง <code>task.md</code> + <code>HANDOFF.md</code> + <code>review.md</code> ล่าสุด</li>
+      </ol>
+      <p class="small muted">monitor แสดงบรรทัด Status ของ HANDOFF พร้อมอายุไฟล์ (นาที) และเหตุการณ์ล่าสุดใน codex.log ถ้า HANDOFF ไม่ได้อัปเดตนานจะเห็นได้ทันที (L2)</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>กัน handoff หายตอน <code>/clear</code>: สามชั้นใน Claude Code</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ชั้น</th><th>ทำงานเมื่อ</th><th>ทำอะไร</th><th>อยู่ที่</th></tr></thead>
+        <tbody>
+          <tr><td><code>/handoff</code> skill</td><td>user สั่งก่อน <code>/clear</code></td><td>เขียน session log ใหม่ (Status / Done / Decisions / Open) แล้ว commit</td><td><code>.claude/skills/handoff</code> ของโปรเจกต์</td></tr>
+          <tr><td><b>clear-guard</b> mod</td><td>พิมพ์ <code>/clear</code></td><td>ถ้า <code>session-log-*.md</code> ล่าสุดเก่ากว่า 30 นาที จะถามก่อน: <i>Cancel, run /handoff first</i> หรือ <i>Clear anyway</i> · <code>/clear force</code> ข้ามการถาม · โปรเจกต์ที่ไม่มี <code>notebooks/knowledge/</code> ไม่ถูกดัก · ถ้าตัวเช็กพังจะปล่อย <code>/clear</code> ผ่าน</td><td><code>~/tools/claude-mods/clear-guard</code> (ติดตั้ง user scope เป็น <code>clear-guard@local-mods</code>)</td></tr>
+          <tr><td>SessionStart hook</td><td>เปิด session ใหม่ / หลัง <code>/clear</code></td><td>พิมพ์ Status + Open ของ session log, Status ของ OPERATOR_HANDOFF และ <code>harness status</code> เข้า context ใหม่</td><td><code>.claude/hooks/session_start_context.sh</code></td></tr>
+          <tr><td>SessionEnd hook</td><td>ปิด session</td><td>ถ้า session log เก่ากว่า 30 นาที เขียน snapshot ดิบไว้ใน <code>.claude/handoff-auto/</code> (gitignored)</td><td><code>.claude/hooks/session_end_snapshot.sh</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small muted">clear-guard ทำงานโดยดัก event <code>command.run</code> ของ <code>/clear</code> ก่อนถึงตัว Claude Code: เรียก <code>next(e)</code> = ปล่อยให้ clear, คืนข้อความแทน = ยกเลิก แก้โค้ดที่ <code>~/tools/claude-mods/clear-guard/hooks/register.ts</code> แล้ว <code>/reload-plugins</code> · test: <code>claude plugin test ~/tools/claude-mods/clear-guard</code> (5 เคส)</p>
+  </div>
+</section>
+
+<!-- 4. Learning loop -->
+<section id="lessons">
+  <div class="eyebrow">4 · The learning loop</div>
+  <h2>ความผิดพลาดทุกครั้งกลายเป็นกติกาของ job ถัดไป</h2>
+  <p>ทุก job ต้องจบด้วย retrospective ไม่ว่าจะ accept หรือ reject บทเรียนเรื่อง workflow (Claude, Codex, harness, git) ไปที่ <code>~/tools/codex-harness/LESSONS.md</code> ส่วนบทเรียนเรื่อง domain ของโปรเจกต์ไปที่ไฟล์ lessons ของโปรเจกต์ (เช่น <code>notebooks/knowledge/lessons.md</code>)</p>
+  <ol class="steps">
+    <li><b>Codex ร่าง</b><span>เมื่อมีอะไรผิดพลาดก็เขียนไว้ใต้ <code>## Lessons (draft)</code> ใน HANDOFF.md โดยห้ามแก้ไฟล์ lessons เอง</span></li>
+    <li><b><code>harness lessons</code></b><span>รวบรวมข้อเท็จจริงต่อรอบ (check fail, needs_input, error, data rounds) และร่างของ worker ไว้ใน <code>retro.md</code></span></li>
+    <li><b>Operator คัดกรอง</b><span>เขียนเป็น entry ที่ Cause ต้อง verify แล้ว เลือก keep / merge / drop และระบุหลักฐาน</span></li>
+    <li><b>Orchestrator อนุมัติ</b><span>ทบทวนแล้ว commit ถ้า lesson ไหนกลายเป็นกฎ ให้บังคับใช้ใน worker rules, check หรือ skill</span></li>
+    <li><b>ฉีดเข้า prompt</b><span>รอบแรกของ job ถัดไปจะได้ LESSONS block: ชื่อ + บรรทัด Prevent ของทุก entry ที่เป็น <code>[who: codex]</code> หรือ <code>[who: both]</code></span></li>
+  </ol>
+  <div class="grid2">
+    <div class="panel">
+      <h3>รูปแบบ entry</h3>
+      <div class="code"><pre><code>## L&lt;n&gt;. &lt;short title&gt;   [who: claude | codex | both] [area: ...]
+- Problem: what went wrong (observable symptom).
+- Cause: why it happened (verified, not guessed).
+- Fix: what was done.
+- Prevent: the rule / check that stops it next time.
+- Seen: date, job / commit.</code></pre></div>
+      <p class="small muted">ไฟล์ของโปรเจกต์ใช้ prefix <code>P&lt;n&gt;</code> ส่วนไฟล์ของ harness ใช้ <code>L&lt;n&gt;</code></p>
+    </div>
+    <div class="panel">
+      <h3>ตัวอย่างจริงจาก drift job</h3>
+      <div class="code"><pre><code>## L13. A round with no size limit ran 37 min
+##      and produced 21 files   [who: both] [area: process]
+- Problem: round 1 took 37 min, wrote 21 files
+  (drift_examples.csv 13.8 MB / 54,656 rows,
+  report.md 89 KB / 914 lines) for 3 requested
+  deliverables, with no short summary.
+- Cause: task.md set no limits on time, number of
+  files or output size (verified: state.json,
+  result.json, task.md).
+- Fix: round 2 feedback set 25 min, no new files,
+  CSV under 5,000 rows, a 40-line summary.
+- Prevent: every task.md states max minutes, allowed
+  files, max output size, "no extra analyses".
+- Seen: 2026-10-08, cdt-drift-analysis.</code></pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Structured lines -->
+<section id="lines">
+  <div class="eyebrow">5 · Structured lines</div>
+  <h2>เขียนเหตุผลเป็นบรรทัดที่ตรวจสอบได้</h2>
+  <p>ทุก model เขียนข้อสรุป ข้อเสนอ และการตรวจสอบเป็นบรรทัดเดียวตามรูปแบบที่กำหนด IO-log hook จะดึงบรรทัดเหล่านี้ออกไปเก็บโดยไม่ต้องเรียก LLM เพิ่ม คำว่า <code>verified</code> ใช้ได้เมื่อมีหลักฐานจริงเท่านั้น (path, คำสั่ง, test, ตัวเลข) ถ้าไม่มีหลักฐานต้องเขียนเป็น <code>hypothesis</code> ทุกตัวอย่างด้านล่างคัดมาตามต้นฉบับจาก drift job</p>
+  <div class="panel lines">
+    <div class="line"><span class="tag t-claude" style="color:var(--claude)">Claim</span><div class="body"><span class="use">ข้อสรุปหรือสาเหตุ พร้อมสถานะและหลักฐาน</span><div class="ex">Claim: review ledger has 3,631 rows, below 5,000; 3,101 source-change groups preserve all 38,012 source material/layer records | Status: verified | Evidence: drift_examples.csv; source_differences.csv; independent group/count assertions.</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--claude)">Claim (refuted)</span><div class="body"><span class="use">สมมติฐานที่ test หักล้างแล้วยังเก็บไว้ และกลายเป็น lesson</span><div class="ex">Claim: all 14 longivity rows would newly enter cores | Status: hypothesis | Evidence: refuted by direct comparison; only 13 new rendered cores; barcode 4005292004855 has the already-mapped underscore form.</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--claude)">Check</span><div class="body"><span class="use">การตรวจงานวิเคราะห์ข้อมูล แบ่งเป็นขั้น source / scope / transform / method / result</span><div class="ex">Check: transform | source ledger | Criterion: unique BU/category/layer/source/old/new and exact full-detail row reconciliation | Actual: 3,101 groups, sum 38,012, no duplicates | Evidence: independent pandas group/count assertions; review_drift | Pass: yes</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--claude)">Proposal</span><div class="body"><span class="use">ทางเลือกที่ต้องให้ user ตัดสิน พร้อมข้อแนะนำ</span><div class="ex">Proposal: source-contract | Options: A) Switch to reconciled view after approval B) Retain current feed pending authority confirmation | Recommend: B | Rationale: snapshots do not establish freshness or authority.</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--human)">Decision</span><div class="body"><span class="use">บันทึกสิ่งที่ user เลือก (<code>By: user</code>)</span><div class="ex">Decision: sanity-policy | Choice: detect/report only; code detects, people decide, CDT owner fixes | By: user | Note: no new LLM step or corrected-value mapping.</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--claude)">Assumption</span><div class="body"><span class="use">สิ่งที่ตัดสินใจไปโดยยังไม่ได้คำตอบจาก user พร้อมความเสี่ยงและเวลาที่ต้องกลับมาดู</span><div class="ex">Assumption: round-1 metrics.json and verification.json must remain unchanged | Rationale: round 2 allows scripts/report/CSVs only | Risk: their output hashes and drift-row count are stale for changed round-2 artifacts | Revisit: metadata updates authorized; current verification is in this handoff/report.</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--claude)">Done</span><div class="body"><span class="use">งานที่เสร็จพร้อมวิธี verify และ commit</span><div class="ex">Done: round-2 feedback implemented in existing files only | Verified: final check.sh exit 0; Ruff check/format pass; independent CSV assertions | Commit: none (harness worker prohibition)</div></div></div>
+    <div class="line"><span class="tag" style="color:var(--muted)">Question · Failure</span><div class="body"><span class="use">drift job ไม่มีสองแบบนี้ (worker ไม่มีคำถาม <code>questions: []</code>) จึงแสดงเฉพาะรูปแบบ</span><div class="ex">Question: &lt;id&gt; | To: user | From: &lt;actor&gt; | ...<br>Failure: want ... | actual ... | evidence ... | cause ... | Status: hypothesis|verified</div></div></div>
+  </div>
+</section>
+
+<!-- 6. Case study -->
+<section id="case">
+  <div class="eyebrow">6 · Case study · cdt-drift-analysis</div>
+  <h2>รอบ 1 ไม่มีขีดจำกัด รอบ 2 มีขีดจำกัดชัดเจน</h2>
+  <p>งานนี้เป็นงานวิเคราะห์อย่างเดียว ห้ามแก้ <code>src/</code> และ <code>configs/</code> โจทย์คือวัดว่า CDT (label และ value) เปลี่ยนไปอย่างไรระหว่าง snapshot แต่ละชุด แล้วเสนอวิธี map ที่ทนต่อการเปลี่ยนแปลง Codex เขียนได้เฉพาะ <code>data/work/cdt_master/analysis</code> และขอไฟล์ส่งมอบสามไฟล์: <code>analysis.py</code>, <code>report.md</code>, <code>drift_examples.csv</code></p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th></th><th>Round 1 · <code>codex exec</code></th><th>Round 2 · <code>codex exec resume</code> (session เดิม)</th></tr></thead>
+      <tbody>
+        <tr><td>เวลา</td><td class="num">37.0 นาที (ไม่ได้กำหนดลิมิต)</td><td class="num">23.5 นาที (ลิมิต 25)</td></tr>
+        <tr><td>ไฟล์</td><td class="num">เขียน 21 ไฟล์ ทั้งที่ขอแค่ 3</td><td>ห้ามสร้างไฟล์ใหม่ (แก้ไฟล์เดิม 6 ไฟล์ + HANDOFF)</td></tr>
+        <tr><td><code>drift_examples.csv</code></td><td class="num">54,656 rows · 13.8 MB (38,012 rows อยู่ระดับ material)</td><td class="num">3,631 rows · 0.94 MB (รวมเป็น 3,101 กลุ่ม ผลรวมยังเท่ากับ 38,012)</td></tr>
+        <tr><td><code>report.md</code></td><td class="num">914 lines · 89 KB ไม่มีสรุปหน้าเดียว</td><td class="num">มีสรุป 31 บรรทัดอยู่ด้านบน แต่ทั้งไฟล์โตเป็น 1,117 lines · 127 KB</td></tr>
+        <tr><td><code>check.sh</code></td><td><span class="yes">PASS</span></td><td><span class="yes">PASS</span></td></tr>
+        <tr><td>คำถาม worker / data requests</td><td class="num">0 / ยังไม่มีช่องนี้</td><td class="num">0 / 0</td></tr>
+        <tr><td>ปัญหาที่ reviewer เจอ</td><td>pass-through จะปล่อยข้อความ annotation ใน CDT value เข้า core text (TOOTHPASTE format <code>cream (inferred - …)</code> 100 แถว) รวมถึงคำสะกดผิด <code>exflociate</code>, <code>longivity</code> แต่รายงานไม่ได้เตือน และ output ใหญ่เกินกว่าจะรีวิวใน Excel</td><td>กฎ edit distance ≤ 2 มี noise สูง: ประมาณ 12 จาก 17 flag เป็นค่าที่ต่างกันจริง (female/male, gel/oil, melon/lemon …)</td></tr>
+        <tr><td>ข้อเสนอของ reviewer</td><td>feedback หนึ่งรอบสั้นๆ และจำกัดขนาด</td><td>accept แล้วส่งเรื่อง edit distance ต่อไปที่ job 2</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>feedback รอบ 2 (<code>feedback_r2.md</code>) มี 6 ข้อ</h3>
+      <ol>
+        <li>Value sanity gate แบบตรวจอย่างเดียว: วงเล็บ, ยาวเกิน 40 ตัวอักษร, มีคำ inferred/default/unknown, edit distance ≤ 2</li>
+        <li>รวม <code>drift_examples.csv</code> ให้เหลือต่ำกว่า 5,000 rows</li>
+        <li>สรุปไม่เกิน 40 บรรทัดไว้บนสุดของ <code>report.md</code></li>
+        <li>Taxonomy drift วิเคราะห์จาก snapshot ที่มีอยู่แล้วเท่านั้น</li>
+        <li>gate ทำหน้าที่ตรวจและรายงานเท่านั้น: code ตรวจ คนตัดสิน และ CDT owner เป็นคนแก้</li>
+        <li>เขียนข้อสรุปเป็นบรรทัด <code>Claim:</code> / <code>Check:</code></li>
+      </ol>
+      <p class="small muted">ข้อ 1-3 มาจากข้อเสนอของ operator ส่วนข้อ 4-6 user เพิ่มเอง (OPERATOR_HANDOFF: "feedback B+4/5/6")</p>
+    </div>
+    <div class="panel">
+      <h3>ผลรอบ 2 ที่ main session verify แล้ว</h3>
+      <ul>
+        <li>sanity gate พบ 34 ค่า / 263 cells ที่จะหลุดเข้า core text ใหม่ (เฉพาะ PCB 7 / 154)</li>
+        <li>3,631 rows และผลรวม 38,012 เท่ากับจำนวนแถวของ <code>source_differences.csv</code></li>
+        <li>สรุปด้านบนยาว 31 บรรทัด, <code>src/</code> และ <code>configs/</code> ไม่ถูกแก้, ไม่มีไฟล์ใหม่</li>
+        <li>พบเพิ่มอีก 3 ค่าที่มีข้อความ annotation จาก LLM pipeline ปนอยู่ใน CDT value</li>
+      </ul>
+      <p class="small muted">Lessons ที่ได้: L13 (กำหนดขนาดรอบ), L14 (ข้อจำกัดของ sandbox: uv cache, ห้าม <code>rm</code> แบบกว้าง), L15 (script ห้ามเขียน state ของ harness) และ P8 / P9 ในไฟล์ของโปรเจกต์</p>
+    </div>
+  </div>
+  <p class="callout"><b>สิ่งที่ได้เรียนรู้:</b> รอบ 1 ใช้เวลานานกว่าเพราะ <code>task.md</code> ไม่ได้กำหนดขนาด ไม่ใช่เพราะ Codex ทำงานช้า พอรอบ 2 ระบุนาที จำนวนไฟล์ จำนวนแถว และความยาวสรุปไว้ชัดเจน งานจึงจบในเวลาและรีวิวได้ ตอนนี้กติกานี้อยู่ใน L13 แล้ว</p>
+</section>
+
+<!-- 7. Cheat sheet -->
+<section id="start">
+  <div class="eyebrow">7 · Cheat sheet</div>
+  <h2>เริ่ม job ใหม่</h2>
+  <p>ก่อนรัน <code>new</code> ต้องถาม user ก่อนว่าต้องการอะไร: path ที่ Codex เขียนได้, ไฟล์ส่งมอบ, ขีดจำกัด (นาที, จำนวนไฟล์, ขนาด output) แล้วจึงเขียน <code>task.md</code> และ check ที่ exit 0 เฉพาะเมื่องานถูกต้อง ค่า default คือ model <code>gpt-6.1-sol</code>, effort <code>medium</code> (ใช้ <code>--effort high</code> กับงานออกแบบที่ยาก) และสูงสุด 5 รอบ (env <code>HARNESS_MODEL</code>, <code>HARNESS_EFFORT</code>)</p>
+  <div class="code"><button class="copy" type="button" id="copy-start">Copy</button><pre><code><span class="c"># once per project: .harness/ + "Lessons and multi-model work" section in CLAUDE.md / AGENTS.md</span>
+harness init
+
+<span class="c"># create the job (scope comes from the user)</span>
+harness new &lt;job&gt; --task task.md \
+  --check-cmd 'test -s out/report.md &amp;&amp; git diff --quiet -- src configs' \
+  --scope out/ [--effort high] [--max-rounds 5] [--lessons notebooks/knowledge/lessons.md]
+
+<span class="c"># round 1 in the background; tag who ran it in commands.log</span>
+HARNESS_ACTOR=operator harness run &lt;job&gt; --bg
+harness monitor            <span class="c"># live table + macOS notification when a job needs you</span>
+harness status             <span class="c"># one-off: status, round, minutes, check, HANDOFF Status + age, last log event</span>
+
+<span class="c"># review, then the user decides</span>
+harness review &lt;job&gt;
+harness feedback &lt;job&gt; -f feedback_r2.md --bg   <span class="c"># next round, same Codex session</span>
+harness accept &lt;job&gt;                            <span class="c"># or: harness reject &lt;job&gt; "why"</span>
+
+<span class="c"># the worker asked for data (needs_input +ndata)</span>
+harness data &lt;job&gt;                              <span class="c"># list requests + static SQL check</span>
+harness data &lt;job&gt; --done pulled.parquet --note "rows / columns" --bg
+
+<span class="c"># always, accepted or rejected</span>
+harness lessons &lt;job&gt;                           <span class="c"># -> jobs/&lt;job&gt;/retro.md</span>
+
+<span class="c"># read the last logged command</span>
+tail -1 .harness/commands.log | python3 -m json.tool</code></pre></div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>task.md ที่ดีต้องมี</h3>
+      <ul>
+        <li>เป้าหมาย, inputs (read-only), output paths และสิ่งที่ห้ามแตะ</li>
+        <li>นาทีสูงสุด, ไฟล์ที่อนุญาต, ขนาด output สูงสุด และระบุ "no extra analyses" (L13)</li>
+        <li>โปรเจกต์ uv: ระบุ <code>UV_CACHE_DIR=&lt;scope&gt;/.uv-cache</code> และ <code>--offline --no-sync</code> (L14)</li>
+        <li>lesson entries ที่เกี่ยวข้องกับงานนี้</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>หลัง accept</h3>
+      <ul>
+        <li>main session รัน test ของโปรเจกต์ แล้ว commit เอง (harness ไม่ commit)</li>
+        <li>รัน <code>harness lessons</code> แล้วให้ operator ร่าง entry และ orchestrator อนุมัติ</li>
+        <li>อัปเดต session log, OPERATOR_HANDOFF.md และ HANDOFF.md ให้ Status เป็นปัจจุบัน</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>ตั้งเครื่องใหม่</h3>
+    <div class="code"><pre><code><span class="c"># harness CLI + lessons</span>
+git clone &lt;codex-harness&gt; ~/tools/codex-harness
+
+<span class="c"># Codex plugin hooks run `node` via /bin/sh with Claude Code's PATH, not your shell rc (L16)</span>
+ln -s ~/.nvm/versions/node/&lt;version&gt;/bin/node ~/.local/bin/node   <span class="c"># re-point after nvm changes version</span>
+
+<span class="c"># clear-guard mod (local marketplace)</span>
+git clone &lt;claude-mods&gt; ~/tools/claude-mods
+claude plugin marketplace add ~/tools/claude-mods
+claude plugin install clear-guard@local-mods --scope user</code></pre></div>
+    <p class="small muted">ถ้าเห็น <code>SessionStart hook error … node: command not found</code> แปลว่า PATH ของ Claude Code ไม่มี node ให้ทำ symlink บรรทัดที่สอง</p>
+  </div>
+</section>
+
+<footer>
+  <span>ที่มา: <code>~/tools/codex-harness/</code> (README.md, harness.py, LESSONS.md), codex-harness skill, <code>~/.claude/CLAUDE.md</code> และไฟล์ใน <code>.harness/</code> ของ job <code>cdt-drift-analysis</code> (2026-10-08)</span>
+  <span>อัปเดต 2026-10-08 บ่าย: เพิ่ม clear-guard mod, hooks ของ handoff, หัวข้อตั้งเครื่องใหม่ และ L16 (node PATH)</span>
+  <span>สถานะ job ณ วันที่เขียน: <code>state.json</code> = <code>awaiting_review</code> หลังรอบ 2 (main session แนะนำให้ accept แต่ยังไม่ได้รัน <code>harness accept</code>)</span>
+</footer>
+</div>
+
+<script>
+(function () {
+  var btn = document.getElementById('copy-start');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    var pre = btn.parentNode.querySelector('pre');
+    var text = pre ? pre.innerText : '';
+    function done(msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = 'Copy'; }, 1600); }
+    function fallback() {
+      try {
+        var r = document.createRange(); r.selectNodeContents(pre);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        done('Selected');
+      } catch (e) { done('Copy failed'); }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done('Copied'); }, fallback);
+      } else { fallback(); }
+    } catch (e) { fallback(); }
+  });
+})();
+</script>
