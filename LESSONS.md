@@ -102,3 +102,28 @@ Entry format (keep each under ~8 lines):
 - Prevent: if git fails with the Xcode license message, use DEVELOPER_DIR=/Library/Developer/CommandLineTools;
   never ask for sudo first.
 - Seen: 2026-10-08.
+
+## L13. A round with no size limit ran 37 min and produced 21 files   [who: both] [area: process]
+- Problem: cdt-drift-analysis round 1 took 37 min, wrote 21 files (drift_examples.csv 13.8 MB / 54,656 rows, report.md
+  89 KB / 914 lines) for 3 requested deliverables, with no short summary.
+- Cause: task.md set no limits on time, number of files or output size (verified: state.json, result.json, task.md).
+- Fix: round 2 feedback set 25 min, no new files, CSV under 5,000 rows, a 40-line summary.
+- Prevent: every task.md states max minutes, allowed files, max output size, "no extra analyses"; the user sets the scope.
+- Seen: 2026-10-08, cdt-drift-analysis.
+
+## L14. Codex sandbox constraints   [who: codex] [area: codex-cli]
+- Problem: (a) uv needed a cache inside the writable paths; (b) a broad `rm -f` cleanup was rejected by the execution
+  guard (codex.log line 97494 "exec_command failed ... Rejected").
+- Cause: workspace-write sandbox allows writes only in the project / scope paths and blocks risky commands. (a) is
+  worker-reported (the original failure line was not found; every later call uses a local UV_CACHE_DIR).
+- Fix: `UV_CACHE_DIR=<scope>/.uv-cache uv run --offline --no-sync ...`; delete only an explicit whitelist of files.
+- Prevent: task.md for uv projects gives the UV_CACHE_DIR / --offline line; workers never use broad rm.
+- Seen: 2026-10-08, cdt-drift-analysis.
+
+## L15. Reproducible scripts must not write harness state   [who: codex] [area: harness]
+- Problem: analysis.py rewrote HANDOFF.md with an "in progress" Status every time it was rerun (incl. by the check).
+- Cause: the script mixed analysis output with job bookkeeping (worker-reported; the final analysis.py no longer
+  writes HANDOFF and the check rerun left it "Done").
+- Fix: removed the HANDOFF write from analysis.py.
+- Prevent: scripts write only their own outputs; HANDOFF.md / state.json are written by the worker or the harness.
+- Seen: 2026-10-08, cdt-drift-analysis.
