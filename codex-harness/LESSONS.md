@@ -144,3 +144,13 @@ Entry format (keep each under ~8 lines):
 - Prevent: checks that call git must fail on a non-zero git exit; pin the baseline commit when the job is created
   (e.g. `BASE=$(git rev-parse HEAD)` written into the check) instead of `HEAD`.
 - Seen: 2026-10-08, knowledge-index (npd-comparables).
+
+## L18. Abbreviated SQL shown to the user was run and failed   [who: claude] [area: review / BigQuery]
+- Problem: the user pasted the SQL from the chat into the BigQuery console and got `Syntax error: Unexpected "." at [4:83]`.
+- Cause (verified): the main session shortened the SQL in its reply (`... 8]` inside UNNEST, `vw_rows AS (...)`);
+  the file itself had passed a dry run.
+- Fix: showed the full file content (comments stripped).
+- Prevent: in chat show a SHORT sketch (user preference 2026-10-08) but label it as not runnable
+  (`-- sketch, not runnable; full SQL: <path>`) and give the file path; the user reads / runs the file itself.
+  Never present a shortened query as if it could be pasted.
+- Seen: 2026-10-08, cdt_annotations_products.sql.
