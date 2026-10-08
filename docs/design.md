@@ -11,6 +11,13 @@ Research behind it: `docs/research/llm-wiki.md`, `docs/research/orca.md`, `docs/
   data requests), per-agent settings that decide which agent may use the network and which may not (5.1), and
   Claude and Codex working together in the same harness (either can orchestrate or work, section 3). Context and
   token use must stay small (section 1, `docs/research/mods-vs-mechanisms.md`).
+- **Human pace, not maximum speed (user, 2026-10-08).** The user likes today's harness because it is slow enough to
+  follow; Orca-style speed (many agents at once) overwhelms. The harness must balance: not too slow, not too fast,
+  slow enough that the user understands the project and the code the agents write. Rules that follow:
+  one active job at a time by default (more only when the user raises the limit for that work); every round ends
+  with a short review packet the user can read in a few minutes (what changed, why, a plain-language walk through
+  the new code, numbers and checks); no new round starts before the user reviewed the last one; parallel agents
+  are for independent reading / research, and their results arrive as one summary, not as a stream.
 - **Roles are per job, not per model.** Any model can orchestrate or work: Claude Code, Codex CLI today; Gemini
   CLI or others later through an adapter. Nothing in the kit assumes "Claude orchestrates, Codex works".
   **Decided** (user): Claude + Codex now, design stays open for Gemini.
