@@ -28,6 +28,11 @@ What costs tokens (measured 2026-10-08 with `token_report.py`, Claude only; Code
 Claim: the main session's long context dominates cost (77% of cache reads), not subagents | Status: verified (one
 day) | Evidence: `python3 ~/tools/agent-io-log/token_report.py --since 2026-10-08 --by actor`.
 
+Tool calls are tracked too (Claude and Codex, from the same log): `token_report.py --tools` gives calls, errors,
+rejections and result characters per tool and actor kind. Result characters are what a call adds to the context, so
+big readers (a 6 MB `codex.log`, a full YAML, a PDF) show up here. The job's `access` (5.1) decides which tools a
+run may have; the log shows which it actually used.
+
 Rules:
 1. Always-loaded context is pointers only (CLAUDE.md / AGENTS.md say where to look); details load on demand.
 2. Index first: wiki `index.md`, `semantic/cookbook.md`, lessons index, skill list.
