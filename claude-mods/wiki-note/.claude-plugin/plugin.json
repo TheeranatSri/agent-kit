@@ -1,1 +1,1 @@
-{ "name": "wiki-note", "version": "0.1.0", "description": "/note appends a dated entry to the project wiki log.md; the status line shows handoff age and the last wiki log date. Paths from .claude/handoff.json." }
+{ "name": "wiki-note", "version": "0.1.1", "description": "/note appends a dated entry to the project wiki log.md; the status line shows handoff age and the last wiki log date. Paths from .claude/handoff.json." }

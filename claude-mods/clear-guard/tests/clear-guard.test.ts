@@ -8,7 +8,7 @@ const MIN = 60_000
 // `config` is the text of .claude/handoff.json (absent when undefined); `logDir` is where the logs are.
 function setup(
   on: any,
-  opts: { exists?: boolean; logAgeMin?: number; answer?: string; config?: string; logDir?: string; logPrefix?: string },
+  opts: { exists?: boolean; logAgeMin?: number; oldLogAgeMin?: number; answer?: string; config?: string; logDir?: string; logPrefix?: string },
 ) {
   mock.clock(on, { now: NOW })
   const seen = { cleared: 0, asked: 0, listed: [] as string[] }
@@ -26,7 +26,7 @@ function setup(
       value: opts.logAgeMin === undefined || !is(e.path, logDir)
         ? []
         : [
-            { name: `${prefix}2026-10-06.md`, kind: 'file', size: 1, mtimeMs: NOW - 999 * MIN, isLink: false },
+            { name: `${prefix}2026-10-06.md`, kind: 'file', size: 1, mtimeMs: NOW - (opts.oldLogAgeMin ?? 999) * MIN, isLink: false },
             { name: `${prefix}2026-10-08.md`, kind: 'file', size: 1, mtimeMs: NOW - opts.logAgeMin * MIN, isLink: false },
             { name: 'lessons.md', kind: 'file', size: 1, mtimeMs: NOW, isLink: false },
           ],
@@ -103,4 +103,10 @@ test('splitGlob', async () => {
   expect(g.name.test('session-logX.md')).toBe(false)
   expect(g.name.test('session-log-1.mdx')).toBe(false)
   expect(splitGlob('log-?.md').dir).toBe('.')
+})
+
+test('an older log edited later does not hide a stale current log', async ($, on) => {
+  const seen = setup(on, { logAgeMin: 90, oldLogAgeMin: 1 })
+  await $.command.run({ command: 'clear' })
+  expect([seen.cleared, seen.asked]).toEqual([0, 1])
 })

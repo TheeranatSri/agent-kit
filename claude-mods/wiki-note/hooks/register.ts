@@ -58,7 +58,8 @@ async function statusText($: any): Promise<string | undefined> {
   const { dir, name } = splitGlob(cfg.sessionLog)
   if (await $.fs.exists(dir)) {
     const logs = (await $.fs.list(dir)).filter((f: any) => name.test(f.name))
-    const newest = [...logs].sort((a: any, b: any) => b.mtimeMs - a.mtimeMs)[0]
+    // last in name order (dated names), not newest mtime
+      const newest = [...logs].sort((a: any, b: any) => (a.name < b.name ? 1 : a.name > b.name ? -1 : 0))[0]
     if (newest) {
       const age = Math.round((now - newest.mtimeMs) / 60000)
       parts.push(`handoff ${age}m${age > cfg.staleMin ? ' stale' : ''}`)

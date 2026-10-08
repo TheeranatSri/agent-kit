@@ -7,7 +7,12 @@ with `./sync-from-this-machine.sh`, then commit here.
 
 ## Status (rewrite in place)
 
-2026-10-08 late night. Shared skills `handoff` + `wiki` in `agent-kit/skills`, linked into ~/.claude/skills and
+2026-10-08 ~18:00. npd-comparables moved to the template hooks + shared /handoff (npd 2ea64c1; old vs new hook
+output diffed on a clone, equal except the added wiki line); L19 (log picked by mtime) fixed in hooks + mods.
+io-log: Decision io-log-store = B, built next as a Codex job once the user OKs the scope (draft in Next 2a).
+Skill sets: Proposal skill-sets waiting for the user.
+
+(previous) 2026-10-08 late night. Shared skills `handoff` + `wiki` in `agent-kit/skills`, linked into ~/.claude/skills and
 ~/.codex/skills (Codex lists both); mod `wiki-note` (/note + status line) built, tested 8/8, installed. Open: SQLite
 for the io-log (Proposal io-log-store), npd handoff skill name clash. Next: user reviews; then design step 1 caps
 check / step 3.
@@ -42,10 +47,11 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 1. User: add the public keys on GitHub (or regenerate keys themselves with a passphrase), then
    `ssh -T git@github.com` and `cd ~/agent-kit && git push -u origin main`.
-2. Open (ask first, lesson L10): (a) Proposal io-log-store (see Decisions); (b) npd-comparables has a project
-   skill `handoff` with the same name as the shared one, so Claude shows only one: delete npd's copy (the shared one
-   does the same with the default paths) and move npd onto the template hooks (`install-project.sh --update`);
-   (c) `origin:` frontmatter on skills (design step 2) not added yet: check first that Codex accepts extra keys.
+2. Open: (a) io-log index (Decision io-log-store B): Codex job, scope to confirm with the user: `io_index.py`
+   (incremental SQLite from the JSONL, schema v1 with real columns, `export` to CSV + `schema.sql` for a later
+   migration), `token_report.py` on the index with output equal to the JSONL scan; work in `~/agent-kit/optional/
+   agent-io-log` (git repo), then copy kit -> `~/tools/agent-io-log` (the sync script copies the other way and
+   would overwrite); (b) Proposal skill-sets; (c) `origin:` frontmatter on skills (design step 2) not added yet: check first that Codex accepts extra keys.
 3. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
 4. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
 
@@ -60,7 +66,9 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 - Decision: transport | Choice: GitHub private repo, user pushes | By: user
 - Decision: identities | Choice: projects_cj = company email, everything else = gmail; kit history rewritten | By: user
 
-Proposal: io-log-store | Options: A) SQLite only B) JSONL source + incremental index.db C) keep JSONL | Recommend: B | Rationale: reports 100x faster at a year of data, JSONL stays greppable and the db can be rebuilt; write cost +1.5 ms per hook is negligible
+Decision: io-log-store | Choice: B (JSONL source + incremental SQLite index) | By: user | Note: the log may move elsewhere later, and JSONL is not a good migration format: keep the SQLite schema clean and versioned (real columns, documented) and give it an export, so a move copies the table, not the JSONL
+- Decision: npd-template | Choice: delete npd's /handoff skill, npd uses the template hooks; check it works the same | By: user | Note: done 2ea64c1
+- Proposal: skill-sets | Options: A) folders per set (core, data, design) + `install.sh --sets` B) each set a local Claude plugin enabled per project (data projects do not load design skills) + per-set links for Codex | Recommend: B | Rationale: user wants sets because design and data/analytics skills differ; per-project enable also saves tokens
 
 ## How to verify
 

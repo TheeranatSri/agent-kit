@@ -45,7 +45,8 @@ export const register: Register = on => {
       const { dir, name: re } = splitGlob(cfg.sessionLog)
       if (!(await $.fs.exists(dir))) return next(e)
       const logs = (await $.fs.list(dir)).filter(f => re.test(f.name))
-      const newest = [...logs].sort((a, b) => b.mtimeMs - a.mtimeMs)[0]
+      // the current log is the last in name order (dated names); an old log edited later must not count
+      const newest = [...logs].sort((a, b) => (a.name < b.name ? 1 : a.name > b.name ? -1 : 0))[0]
       if (!newest) return next(e)
       ageMin = Math.round(((await $.clock.now()) - newest.mtimeMs) / 60000)
       name = newest.name

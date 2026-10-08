@@ -101,3 +101,14 @@ test('no wiki and no session log: status line cleared', async ($, on) => {
   await clock.settle()
   expect(seen.status.at(-1)).toBeUndefined()
 })
+
+test('status uses the last log by name, not the newest mtime', async ($, on) => {
+  const { seen, clock } = setup(
+    on,
+    { 'notebooks/knowledge/session-log-2026-10-06.md': '', 'notebooks/knowledge/session-log-2026-10-08.md': '' },
+    { 'notebooks/knowledge/session-log-2026-10-06.md': NOW - 1 * MIN, 'notebooks/knowledge/session-log-2026-10-08.md': NOW - 90 * MIN },
+  )
+  await start($)
+  await clock.settle()
+  expect(seen.status.at(-1)).toBe('handoff 90m stale')
+})

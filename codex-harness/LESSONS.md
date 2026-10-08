@@ -154,3 +154,15 @@ Entry format (keep each under ~8 lines):
   (`-- sketch, not runnable; full SQL: <path>`) and give the file path; the user reads / runs the file itself.
   Never present a shortened query as if it could be pasted.
 - Seen: 2026-10-08, cdt_annotations_products.sql.
+
+## L19. Generic hook picked the session log by mtime, the project hook by name   [who: claude] [area: process / hooks]
+- Problem: the agent-kit template hooks (and clear-guard 0.2.0, wiki-note) chose the "newest" session log by
+  mtime; npd's own hooks chose the last file by name. When an older log was edited later (a Codex job touched
+  `session-log-2026-10-06.md`), the template printed the wrong Status / Open.
+- Cause (verified): `ls -t` / sort by `mtimeMs` in the generic code; found by diffing old vs new hook output on a
+  clone of npd before switching (old picked 10-08, new picked 10-06).
+- Fix: last file in name order (dated names) in handoff_config.sh, clear-guard and wiki-note; tests for an older log
+  with a newer mtime.
+- Prevent: when a generic version replaces a working project script, run both on a clone of the real project
+  (same inputs, edge cases such as stale / fresh) and diff the outputs before switching.
+- Seen: 2026-10-08, npd-comparables move to the agent-kit template.

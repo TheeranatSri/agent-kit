@@ -113,11 +113,11 @@ class HookTest(ProjectCase):
         self.assertIn("docs/kb/lessons.md", out)
         self.assertIn("docs/kb/index.md first", out)
 
-    def test_start_hook_picks_newest_log(self) -> None:
+    def test_start_hook_picks_last_log_by_name_not_mtime(self) -> None:
         old = self.p / "docs/handoff-2026-10-01.md"
-        old.write_text("## Status\n\nOLD-STATUS\n")
+        old.write_text("## Status\n\nOLD-STATUS\n")  # older log edited after the current one
         t = time.time() - 3600
-        os.utime(old, (t, t))
+        os.utime(self.log, (t, t))
         self.assertNotIn("OLD-STATUS", self.hook("session_start_context.sh").stdout)
 
     def test_end_hook_fresh_log_no_snapshot(self) -> None:
