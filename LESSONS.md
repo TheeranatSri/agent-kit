@@ -19,7 +19,7 @@ Entry format (keep each under ~8 lines):
 - Problem: first 8 Codex runs started with `reasoning effort: none`; too weak for design work.
 - Cause: `codex exec` default; the model name alone does not set effort.
 - Fix: stopped and restarted with `-c model_reasoning_effort="high"`.
-- Prevent: harness default effort = high; check the log header line before trusting a run.
+- Prevent: set the effort explicitly (user default since 2026-10-08: medium); check the log header line before trusting a run.
 - Seen: 2026-10-08, prompt v3 per BU.
 
 ## L2. HANDOFF Status went stale   [who: codex] [area: harness]
