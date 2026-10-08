@@ -617,14 +617,25 @@ def cmd_lessons(a) -> None:
         issues.append("reached max_rounds")
     lines += ["", "## What went wrong (facts from the rounds)", *([f"- {i}" for i in issues] or ["- nothing recorded"])]
     hand = (d / "HANDOFF.md").read_text(encoding="utf-8") if (d / "HANDOFF.md").exists() else ""
-    m = re.search(r"^#+\s*Lessons \(draft\)\s*\n(.*?)(?=^#+\s|\Z)", hand, re.M | re.S)
-    lines += ["", "## Worker's Lessons (draft) from HANDOFF.md", (m.group(1).strip() if m else "") or "(none)"]
+    lines += ["", "## Worker's Lessons (draft) from HANDOFF.md", lessons_section(hand) or "(none)"]
     lines += ["", "## Next", f"- Write entries (Problem / Cause / Fix / Prevent / Seen, [who] [area]): workflow ->"
               f" {HARNESS_LESSONS}; domain -> {project_lessons_path(st) or 'the project lessons file'}. "
               "Cause must be verified. The orchestrator approves and commits."]
     text = "\n".join(lines) + "\n"
     (d / "retro.md").write_text(text, encoding="utf-8")
     print(text)
+
+
+def lessons_section(hand: str) -> str:
+    """Body of the 'Lessons (draft)' heading, up to the next heading of the same or higher level.
+
+    Sub-headings inside it (e.g. '### P1.') belong to the section (LESSONS L27)."""
+    m = re.search(r"^(#+)\s*Lessons \(draft\)\s*$", hand, re.M)
+    if not m:
+        return ""
+    rest = hand[m.end():]
+    end = re.search(r"^#{1,%d}\s" % len(m.group(1)), rest, re.M)
+    return (rest[:end.start()] if end else rest).strip()
 
 
 def cmd_review(a) -> None:

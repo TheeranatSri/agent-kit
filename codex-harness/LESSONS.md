@@ -175,3 +175,73 @@ Entry format (keep each under ~8 lines):
 - Prevent: before a background Codex run, smoke-test the exact argv in the foreground with a trivial prompt (or
   `--help` of the exact subcommand, read in full); harness jobs have no network, so web research uses this form.
 - Seen: 2026-10-08, context-tools / mods research.
+
+## L21. Worker sandbox cannot bind localhost, so HTTP acceptance tests stop inside it   [who: both] [area: harness / codex-cli]
+- Problem: Rounds 2 and 3 ended with worker status `blocked`, but the same check.sh exited 0 when the operator ran it outside the sandbox. Each round needed an operator rerun to learn that the work was correct.
+- Cause (verified): the workspace-write sandbox rejects `socket.bind(('127.0.0.1', 0))` with PermissionError errno 1. Worker HANDOFF rounds 1-3 point to tests/test_pipeline_r1.py:160. The operator's check.sh runs printed `ok server /overview ...` and exited 0.
+- Fix: The operator reran check.sh outside the sandbox after every round, and the worker kept its own extra tests free of sockets.
+- Prevent: In task.md, mark any acceptance step that needs localhost as "operator-run". The harness should run the check itself after the round, outside the sandbox (it already does), and the operator treats that result as authoritative. Workers should report "blocked by sandbox socket" as `done` + Open issue, not `blocked`, when every other check passes.
+- Seen: 2026-10-08, pipeline-r1 rounds 1-3.
+
+## L22. The operator agent ran in an isolated git worktree, not the main checkout   [who: claude] [area: process / harness] (orchestrator)
+- Problem: The job, .harness/ and the worker's changes lived in .claude/worktrees/agent-<id>. The orchestrator had to copy the files to main, fast-forward the worktree before round 2 (stash / ff / pop), and copy them back again after accept.
+- Cause (verified): the orchestrator (Claude) launched the operator Agent with `isolation: "worktree"`. Its sandbox refused git in the shared checkout ("must target its own worktree"). Also, `git status` in the worktree shows `?? .harness/`, so `harness init`'s exclude entry did not take effect there.
+- Fix: The job ran in the worktree, the orchestrator synced by hand, and the operator reported the location in every report.
+- Prevent: Launch the harness operator WITHOUT worktree isolation (it must run in the project checkout it reports on). If isolation is required, name the worktree path in task.md and the review, and plan the sync step. Also, `harness init` could write the exclude entry to the common git dir (`git rev-parse --git-common-dir`/info/exclude) so worktrees also hide .harness/.
+- Seen: 2026-10-08, pipeline-r1.
+
+## L23. The agent sandbox refused `--check-cmd 'bash …'`   [who: claude] [area: harness]
+- Problem: `harness new ... --check-cmd 'bash docs/plans/pipeline-r1/check.sh'` was refused before it ran, so the operator had to deviate from the given command.
+- Cause (verified): The worktree-isolated agent's command guard refuses a command string embedded in arguments, because it cannot prove the string is not git. The refusal said "runs harness with the text bash docs/plans/pipeline-r1/check.sh". Shell variables (`J=...; python3 $J`) were refused for the same reason.
+- Fix: Used `--check docs/plans/pipeline-r1/check.sh`. The job's check.sh is byte-identical to the plan's (`diff`: SAME).
+- Prevent: In job plans and operator prompts, prefer `--check FILE` over `--check-cmd 'CMD'`. In isolated agents, use literal paths instead of shell variables.
+- Seen: 2026-10-08, pipeline-r1 job creation.
+
+## L24. The worker's offline uv cache was not ready in the sandbox   [who: codex] [area: codex-cli]
+- Problem: In round 1, the worker spent time building a temporary uv cache. The default cache was denied, and the first copy lacked a transitive dependency.
+- Cause (verified, from worker HANDOFF round 1): the sandbox denied ~/.cache/uv/sdists-v9/.git. soundfile 0.14.0 needs typing-extensions 4.16.0, which the first copied set omitted. The worker left /private/tmp/pipeline-r1-uv-cache behind.
+- Fix: The worker built a writable cache at /private/tmp/pipeline-r1-uv-cache from installed archives, including the transitive dependency.
+- Prevent: This extends L14. For uv projects, task.md gives a ready writable `UV_CACHE_DIR` (pre-populated by the orchestrator) plus `UV_OFFLINE=1`. Delete the temporary cache after the job.
+- Seen: 2026-10-08, pipeline-r1 round 1.
+
+## L25. Two operators rewrote the shared OPERATOR_HANDOFF.md   [who: claude] [area: harness]
+- Problem: pipeline-mockups operator created .harness/OPERATOR_HANDOFF.md with its section; the pipeline-r1 operator later rewrote the whole file with its own sections, and the pipeline-mockups section was lost (re-appended by hand).
+- Cause (verified): one file per project shared by parallel operators, each writing it whole (Write/overwrite) rather than editing only its own section; seen by `grep "^# " .harness/OPERATOR_HANDOFF.md` showing only pipeline-r1 content after their update.
+- Fix: re-appended the pipeline-mockups section at the end, under its own top-level heading.
+- Prevent: one handoff file per job (e.g. `.harness/jobs/<job>/OPERATOR_HANDOFF.md`), or operators only append/edit their own section; enforce in the codex-harness skill / README.
+- Seen: 2026-10-08, pipeline-mockups + pipeline-r1 in parallel.
+
+## L26. `harness new` silently runs init and creates AGENTS.md outside the job scope   [who: claude] [area: harness]
+- Problem: operator was told not to run `harness init` if .harness/ exists; it did not exist, and `harness new` auto-initialised it, creating an untracked AGENTS.md at the repo root (with the "Lessons and multi-model work" section) during a job whose scope was docs/design/mockups/ only.
+- Cause (verified): harness.py `cmd_new` calls `cmd_init` when HDIR is missing; `ensure_agents_sections` creates AGENTS.md if absent.
+- Fix: reported in orchestrator_review.md as a non-worker change.
+- Prevent: orchestrator runs `harness init` once (and decides on AGENTS.md / commits it) before launching parallel operators; or `harness new` should refuse / warn instead of auto-init. Also two parallel operators can both hit init at the same time.
+- Seen: 2026-10-08, pipeline-mockups.
+
+## L27. `harness lessons` drops the worker's lessons when they use ### sub-headings   [who: claude] [area: harness]
+- Problem: retro.md shows "Worker's Lessons (draft): (none)" although HANDOFF.md has a `## Lessons (draft)` section with entries P1 and P2.
+- Cause (verified): harness.py line ~620 regex `^#+\s*Lessons \(draft\)\s*\n(.*?)(?=^#+\s|\Z)` stops at the next heading of ANY level, so the first `### P1.` ends the match with an empty body.
+- Fix: `lessons_section()` stops only at a heading of the same or higher level; tests/test_lessons_section.py; verified on pipeline-mockups retro (worker P1 now appears).
+- Prevent: stop only at a heading of the same or higher level (e.g. `(?=^#{1,2}\s|\Z)`), and add a stub test with `###` entries.
+- Seen: 2026-10-08, pipeline-mockups retro.md.
+
+Note (2026-10-08, pipeline-r1): `harness lessons` also loses worker drafts when HANDOFF.md is rewritten in a later round; saving rounds/<n>/HANDOFF.md would keep them (see L27 for the regex part).
+
+## L28. Task named an API endpoint that does not work on this machine   [who: claude] [area: process]
+- Problem: job run-openthai coded against Ollama `POST /v1/systemone`; on this Mac (Ollama 0.40.1) the model
+  answers "does not support decision", so the runner needs another round for OpenThai's own server on :8000.
+- Cause (verified): the endpoint came from a web-research note (Codex, read-only) and from the model page; nobody
+  called it locally before task.md was written. `ollama show` lists only tools / thinking / completion.
+- Fix: install OpenThai's Python server (`uvicorn openthai_systemone.server:app --port 8000`), point the runner's
+  url there.
+- Prevent: before a task.md depends on an external API / runtime, the orchestrator smoke-tests one real call on
+  the target machine (the Laya smoke test before its job would have been the same habit); research notes are
+  hypotheses until a local call succeeds.
+- Seen: 2026-10-08, decision-model eval (run-openthai).
+
+## L29. A language-share check pushed the worker to add answer-giving text   [who: claude] [area: harness check / evals]
+- Problem: decision-cases round 1 passed its check, but all 8 context_retention_mixed states (and agent_routing_mixed_007/008, network_level_mixed_001/005, agent_routing_th_002) ended with an added Thai sentence that stated the answer ("...จึงไม่จำเป็นต้องเก็บ...").
+- Cause (verified): the check forced Thai >= 15% (mixed) / >= 50% (th) of letters but did not forbid commentary; the worker met the share by adding Thai text (its HANDOFF lesson: "enough Thai task context to meet the language-share rule"), placed after the English tool excerpt, and that text explained the label. The orchestrator wrote the check.
+- Fix: round 2 feedback + a tighter check ('Tool output:' line English-only, verdict-word list); the worker removed every verdict; 24/24 excerpts verbatim, check PASS.
+- Prevent: a check that forces a language share (or any surface property) must also forbid the easy way to satisfy it: verdict/explanation words in the state, translated tool output; the operator greps states for answer hints before recommending accept, because a word list catches only part of them (2 of ~13 here).
+- Seen: 2026-10-08, decision-cases rounds 1-2 (agent-kit).
