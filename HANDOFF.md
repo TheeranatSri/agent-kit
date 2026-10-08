@@ -57,6 +57,7 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 ## Decisions
 
+- Decision: ultimate-goal | Choice: an Orca-like harness for data analytics / data science: per-agent network on/off, Claude and Codex working together, small context / token use | By: user | Note: recorded in docs/design.md section 0
 - Decision: models | Choice: Claude + Codex only for now (the two the user uses); design stays role-agnostic so either can orchestrate or work | By: user
 - Decision: worker-network | Choice: approved (requests in 4 levels, planning round + per-job budget); access is set per job scope, not per model | By: user
 - Decision: caps | Choice: CLAUDE.md / AGENTS.md <= 120 lines, skill description <= 300 chars | By: user

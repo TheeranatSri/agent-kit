@@ -5,6 +5,12 @@ Research behind it: `docs/research/llm-wiki.md`, `docs/research/orca.md`, `docs/
 
 ## 0. Principles
 
+- **Ultimate goal (user, 2026-10-08): an Orca-like harness for data analytics / data science.** Like Orca
+  (stablyai/orca, `docs/research/orca.md`): several agents side by side, each in its own session / worktree, one
+  place to watch and review them. Different from Orca: built for data work (numbers, tables, claims, Check lines,
+  data requests), per-agent settings that decide which agent may use the network and which may not (5.1), and
+  Claude and Codex working together in the same harness (either can orchestrate or work, section 3). Context and
+  token use must stay small (section 1, `docs/research/mods-vs-mechanisms.md`).
 - **Roles are per job, not per model.** Any model can orchestrate or work: Claude Code, Codex CLI today; Gemini
   CLI or others later through an adapter. Nothing in the kit assumes "Claude orchestrates, Codex works".
   **Decided** (user): Claude + Codex now, design stays open for Gemini.
