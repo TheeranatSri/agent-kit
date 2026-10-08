@@ -24,7 +24,7 @@ installs and verifies.
 | `optional/agent-io-log/` | logs prompts/answers + structured lines to `~/agent-io-logs/`; installed only with `--with-io-log` |
 | `install.sh` | idempotent installer (`--dry-run`, `--with-io-log`); backs up, never deletes |
 | `SETUP.md` | the steps Claude follows |
-| `sync-from-this-machine.sh` | on the original machine: copy the live files into the kit before committing |
+| `sync-from-this-machine.sh` | on the original machine: copy the live files into the kit (files only, not history) before committing |
 
 ## Updating
 

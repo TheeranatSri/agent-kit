@@ -4,19 +4,16 @@
 set -euo pipefail
 KIT="$(cd "$(dirname "$0")" && pwd)"
 
-sync_repo() {  # ~/tools/<name> is its own git repo: pull its commits into the kit (history kept)
+sync_dir() {  # copy the tracked files of ~/tools/<name> into the kit (history stays in ~/tools; the kit gets one commit)
   local name="$1" src="$HOME/tools/$1"
   if [ -L "$src" ]; then echo "skip $name: ~/tools/$name is already a link to the kit"; return; fi
-  [ -d "$src/.git" ] || { echo "skip $name: $src is not a git repo"; return; }
-  if [ -n "$(git -C "$src" status --porcelain --untracked-files=no)" ]; then
-    echo "STOP $name: uncommitted changes in $src; commit them there first"; return 1
-  fi
-  (cd "$KIT" && git fetch -q "$src" main && git merge -q -X subtree="$name" --allow-unrelated-histories \
-    -m "chore: sync $name from ~/tools/$name" FETCH_HEAD) && echo "merged $name"
+  [ -d "$src" ] || { echo "skip $name: no $src"; return; }
+  rsync -a --delete --exclude .git --exclude __pycache__ --exclude .DS_Store --exclude .claude-plugin/types \
+    "$src/" "$KIT/$name/" && echo "copied $name"
 }
 
-sync_repo codex-harness
-sync_repo claude-mods
+sync_dir codex-harness
+sync_dir claude-mods
 
 cp "$HOME/.claude/CLAUDE.md" "$KIT/claude-home/CLAUDE.md"
 for s in "$KIT"/claude-home/skills/*/; do
