@@ -47,28 +47,30 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 ## Next
 
-1. User: create the private repo `agent-kit` on github.com (empty, no README), then
-   `cd ~/agent-kit && git push -u origin main` (SSH works: `ssh -T git@github.com` authenticates as TheeranatSri).
-2. Open, waiting for the user (Claude's push-back 2026-10-08, rule truth-over-agreement):
-   1. io-index: keep parked and start work-order step 1 first? (Claude: yes; JSONL scan is 59 ms today.)
-   2. skill-sets B: test first whether claude.ai-synced skills (papercut, gouache, line-*) can be turned off per
-      project; if not, B gives only order, and A is cheaper. Claim B saves design-skill tokens: hypothesis.
-   3. Orca goal: take the single review place + worktree isolation, not many agents in parallel by default
-      (human pace). Write this into design.md section 0 once the user agrees.
-3. Work order (Decision work-order): 1) `access` / network per job in harness (design 5.1; today all jobs have no
-   network, web research ran outside the harness with `codex --search exec -s read-only ... -o out.md -`, lesson L20)
-   2) `harness --worker claude` 3) bounded review packets with the understanding section (design s.0)
-   4) io-index (job drafted). One job at a time; ask the scope before each job.
-4. io-index check.sh: the dry run did not finish in >5 min and was stopped, so the check is NOT yet proven to fail
-   before the work; make it faster (fewer modes per run or a smaller fixture) and dry-run it before the job.
-5. Codex research open questions (verbatim in the research notes): external-classifier (may text go to TypeSafe?),
-   continuity-policy, reset-threshold, output-budget, routing-quality.
-6. After each change: tests (`claude plugin test`, `python3 -m unittest discover -s tests`), `/reload-plugins`,
-   `./sync-from-this-machine.sh`, commit here.
+1. Research D (Orca + deepseek-harness ideas) and E (decision models vs TypeSafe) by Codex: save to docs/research,
+   summarise once for the user (understanding section: what it means for us, verified vs hypothesis).
+2. Work-order step 1: draft task for `access` / network per job in harness (design 5.1); show the user the scope
+   before creating the job; one job at a time.
+3. Then: `harness --worker claude`; bounded review packets with the understanding section.
+4. Skill sets A: `skills/<set>/<name>` (core, data, design later) + `install.sh --sets`; skill token monitor (per skill:
+   description tokens loaded each session + times used, from /context numbers or SKILL.md frontmatter + io-log
+   `skills` field). Scope with the user first.
+5. Open questions from Codex research (not answered yet): reset threshold (60-70%?), output budget (4-8k chars?),
+   routing model; external classifier: Claude advised no (company data).
+
+## Backlog
+
+- io-index (Decision io-log-store B): drafted in .harness/drafts/io-index (task.md, check.sh, fixture). Before
+  running: make check.sh faster (dry run did not finish in >5 min) and prove it fails before the work.
 
 ## Decisions
 
 - Decision: human-pace | Choice: the harness keeps a pace the user can follow (one active job by default, short review packets that explain the new code, no new round before review); speed is a setting, not the goal | By: user | Note: design.md section 0
+- Decision: next-step | Choice: work-order step 1 (`access` / network per job in harness) next; io-index moved to the backlog | By: user
+- Decision: skill-sets-final | Choice: A (folders per set + `install.sh --sets`), replaces B; plus monitoring of how many tokens each skill / set costs | By: user | Note: design skills cost ~2.3k tokens (claude.ai sync) + ~0.7k (design plugin) per session, measured from /context
+- Decision: orca-scope | Choice: Orca + ideas from github.com/deepseek-ai/deepseek-harness (research task D running) | By: user
+- Decision: decision-models | Choice: compare TypeSafe Jev with iapp-technology/openthai-systemone, ipenywis/laya-ultrafast, Cloudflare CLEF decision models before any pilot (research task E running) | By: user
+- Decision: push | Choice: done by the user; origin/main = c12f9aa verified with git fetch | By: user
 - Decision: truth-over-agreement | Choice: never invent data; do not agree to please, push back with evidence (own earlier proposals included) | By: user | Note: in global CLAUDE.md + AGENTS.md
 - Decision: understanding-first | Choice: results count only when the user can explain them (BU context, data source, method choice and fit, strength of evidence, the code); choices explained as comparisons; review packets carry an understanding section | By: user | Note: design.md section 0
 - Decision: objective | Choice: 1) context size, 2) subscription quota; total tokens / money after | By: user
