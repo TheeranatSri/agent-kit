@@ -34,9 +34,12 @@ Every page starts with frontmatter: `type`, `status` (active | reference | done 
 
 ## Lint (check, zero LLM cost)
 
+`wiki_lint.py` sits next to this file (Claude: `~/.claude/skills/wiki/`, Codex: `~/.codex/skills/wiki/`; both link
+to `agent-kit/skills/wiki`). Run it from the project root:
+
 ```bash
-python3 .claude/skills/wiki/wiki_lint.py            # reads wikiDir from .claude/handoff.json
-python3 .claude/skills/wiki/wiki_lint.py --dir docs/knowledge
+python3 ~/.claude/skills/wiki/wiki_lint.py           # reads wikiDir from .claude/handoff.json
+python3 ~/.codex/skills/wiki/wiki_lint.py --dir docs/knowledge
 ```
 
 Errors (exit 1): missing frontmatter keys, unknown status, superseded without a valid `superseded_by`, a page not

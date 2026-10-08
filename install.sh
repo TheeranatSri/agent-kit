@@ -57,6 +57,13 @@ for s in "$KIT"/claude-home/skills/*/; do
   s="${s%/}"; put "$s" "$HOME/.claude/skills/$(basename "$s")"
 done
 
+say "shared skills (agent-kit/skills) -> Claude and Codex, as links so git pull updates both"
+for s in "$KIT"/skills/*/; do
+  s="${s%/}"; n="$(basename "$s")"
+  link "$s" "$HOME/.claude/skills/$n"
+  link "$s" "$HOME/.codex/skills/$n"
+done
+
 say "Codex: global AGENTS.md"
 put "$KIT/codex-home/AGENTS.md" "$HOME/.codex/AGENTS.md"
 

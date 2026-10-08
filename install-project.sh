@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Add the agent-kit project template to a project: /handoff + /wiki skills, SessionStart / SessionEnd hooks,
+# Add the agent-kit project template to a project: SessionStart / SessionEnd hooks (the /handoff and /wiki skills are
+# user-level, installed by install.sh from agent-kit/skills),
 # .claude/handoff.json (shared with clear-guard), wiki seed pages, and the rules section in CLAUDE.md.
 # Usage: ./install-project.sh <project-dir> [--wiki-dir DIR] [--session-log GLOB] [--update] [--dry-run]
 #   --wiki-dir     wiki folder, relative to the project (default notebooks/knowledge)
@@ -56,11 +57,11 @@ seed() {
   echo "seeded:  ${dst#$DEST/}"
 }
 
-say "skills and hooks -> $DEST/.claude"
+say "hooks -> $DEST/.claude/hooks"
 ( cd "$TPL" && find .claude -type f ! -name handoff.json ! -name settings.json | sort ) | while read -r f; do
   put "$TPL/$f" "$DEST/$f"
 done
-run chmod +x "$DEST"/.claude/hooks/*.sh "$DEST/.claude/skills/wiki/wiki_lint.py"
+run chmod +x "$DEST"/.claude/hooks/*.sh
 
 say ".claude/handoff.json (read by clear-guard, the hooks and the skills)"
 if [ -e "$DEST/.claude/handoff.json" ]; then echo "exists:  .claude/handoff.json (not touched)"
@@ -123,6 +124,6 @@ else run sh -c "echo '.claude/handoff-auto/' >> '$DEST/.gitignore'"; echo "added
 
 say "checks"
 if [ "$DRY" = 1 ]; then echo "DRY: skipped"; exit 0; fi
-(cd "$DEST" && python3 .claude/skills/wiki/wiki_lint.py) || echo "WARN:    wiki_lint found problems (see above)"
+(cd "$DEST" && python3 "$KIT/skills/wiki/wiki_lint.py") || echo "WARN:    wiki_lint found problems (see above)"
 (cd "$DEST" && CLAUDE_PROJECT_DIR="$DEST" .claude/hooks/session_start_context.sh >/dev/null) && echo "ok:      SessionStart hook runs"
 echo; echo "done. Review with 'git -C $DEST status', then commit. Start a new Claude Code session to load the hooks."

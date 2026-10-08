@@ -16,4 +16,4 @@
 - **Every note change updates the wiki in the same commit** (skill `/wiki`): new page → index line; status change →
   frontmatter + index line; knowledge event → one entry at the end of `log.md`. `log.md` is append-only.
 - Frontmatter on every page: `type`, `status` (active | reference | done | superseded), `updated`, `sources`.
-  Check with `python3 .claude/skills/wiki/wiki_lint.py`.
+  Check with `python3 ~/.claude/skills/wiki/wiki_lint.py` (Codex: `~/.codex/skills/wiki/`).

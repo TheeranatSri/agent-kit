@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 KIT = Path(__file__).resolve().parents[1]
-LINT = KIT / "project-template/.claude/skills/wiki/wiki_lint.py"
+LINT = KIT / "skills/wiki/wiki_lint.py"
 
 
 def sh(*args: str, cwd: Path | None = None, env: dict | None = None, input: str = "") -> subprocess.CompletedProcess:
@@ -43,7 +43,7 @@ class ProjectCase(unittest.TestCase):
 class InstallTest(ProjectCase):
     def test_default_install(self) -> None:
         r = self.install()
-        for f in [".claude/skills/handoff/SKILL.md", ".claude/skills/wiki/SKILL.md", ".claude/hooks/handoff_config.sh",
+        for f in [".claude/hooks/handoff_config.sh", ".claude/hooks/session_start_context.sh",
                   "notebooks/knowledge/index.md", "notebooks/knowledge/log.md", "notebooks/knowledge/lessons.md"]:
             self.assertTrue((self.p / f).exists(), f)
         cfg = json.loads((self.p / ".claude/handoff.json").read_text())
@@ -66,22 +66,26 @@ class InstallTest(ProjectCase):
         self.assertNotIn("added:", r.stdout)
 
     def test_keeps_existing_settings_and_files(self) -> None:
-        (self.p / ".claude/skills/handoff").mkdir(parents=True)
-        (self.p / ".claude/skills/handoff/SKILL.md").write_text("mine\n")
+        (self.p / ".claude/hooks").mkdir(parents=True)
+        (self.p / ".claude/hooks/session_end_snapshot.sh").write_text("mine\n")
         (self.p / ".claude/settings.json").write_text(json.dumps({"permissions": {"allow": ["Bash(ls)"]},
                                                                   "hooks": {"Stop": [{"hooks": []}]}}))
         (self.p / "CLAUDE.md").write_text("# Mine\n\n## Lessons and multi-model work\nown copy\n")
         r = self.install()
-        self.assertIn("differs: .claude/skills/handoff/SKILL.md", r.stdout)
-        self.assertEqual((self.p / ".claude/skills/handoff/SKILL.md").read_text(), "mine\n")
+        self.assertIn("differs: .claude/hooks/session_end_snapshot.sh", r.stdout)
+        self.assertEqual((self.p / ".claude/hooks/session_end_snapshot.sh").read_text(), "mine\n")
         s = json.loads((self.p / ".claude/settings.json").read_text())
         self.assertEqual(s["permissions"], {"allow": ["Bash(ls)"]})
         self.assertIn("Stop", s["hooks"])
         self.assertIn("SessionStart", s["hooks"])
         self.assertNotIn("agent-kit:project-rules", (self.p / "CLAUDE.md").read_text())
         self.install("--update")
-        self.assertNotEqual((self.p / ".claude/skills/handoff/SKILL.md").read_text(), "mine\n")
-        self.assertTrue(list((self.p / ".claude/skills/handoff").glob("SKILL.md.bak-*")))
+        self.assertNotEqual((self.p / ".claude/hooks/session_end_snapshot.sh").read_text(), "mine\n")
+        self.assertTrue(list((self.p / ".claude/hooks").glob("session_end_snapshot.sh.bak-*")))
+
+    def test_no_project_skills(self) -> None:
+        self.install()
+        self.assertFalse((self.p / ".claude/skills").exists())  # /handoff and /wiki are user-level now
 
     def test_dry_run_writes_nothing(self) -> None:
         self.install("--dry-run")

@@ -34,6 +34,7 @@ What it does:
 | `harness` command | `~/.local/bin/harness` | symlink to `harness.py` |
 | global rules for Claude | `~/.claude/CLAUDE.md` | copy |
 | user skills: codex-harness, bq-readonly-pull, excel-review-workbook, paid-run-gate | `~/.claude/skills/<name>/` | copy |
+| shared skills `handoff`, `wiki` (Claude and Codex) | `~/.claude/skills/<name>`, `~/.codex/skills/<name>` | symlink to `agent-kit/skills`, so `git pull` updates both |
 | global rules for Codex | `~/.codex/AGENTS.md` | copy |
 | node for hooks (lesson L16) | `~/.local/bin/node` | symlink to the newest nvm node, if no node link yet |
 | Claude Code plugins | `codex@openai-codex`, `clear-guard@local-mods` (user scope) | `claude plugin install` |
@@ -69,7 +70,7 @@ When the user wants the handoff / wiki setup in a project (ask for the wiki fold
 ~/agent-kit/install-project.sh <project-dir> [same options]
 ```
 
-Show the dry run first. It adds `.claude/skills/{handoff,wiki}`, `.claude/hooks/*.sh`, `.claude/handoff.json` (read
+Show the dry run first. It adds `.claude/hooks/*.sh` (the `/handoff` and `/wiki` skills are user-level, from step 2), `.claude/handoff.json` (read
 by clear-guard too), the SessionStart / SessionEnd hooks in `.claude/settings.json` (merged, backup kept), wiki seed
 pages, the rules section at the end of CLAUDE.md (and AGENTS.md if present), and `.claude/handoff-auto/` in
 `.gitignore`. Files the project already has are kept (reported as `differs`); `--update` replaces them with a backup.
