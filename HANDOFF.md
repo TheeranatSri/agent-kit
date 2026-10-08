@@ -60,6 +60,8 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 
 ## Backlog
 
+- Harness UX/UI as a terminal one-stop service, wrapped with https://herdr.dev/ (user idea 2026-10-08). Not researched
+  yet: first verify what herdr.dev is and how it would wrap the harness (Codex research, web), then design.
 - io-index (Decision io-log-store B): drafted in .harness/drafts/io-index (task.md, check.sh, fixture). Before
   running: make check.sh faster (dry run did not finish in >5 min) and prove it fails before the work.
 
