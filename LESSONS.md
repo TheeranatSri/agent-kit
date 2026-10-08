@@ -127,3 +127,10 @@ Entry format (keep each under ~8 lines):
 - Fix: removed the HANDOFF write from analysis.py.
 - Prevent: scripts write only their own outputs; HANDOFF.md / state.json are written by the worker or the harness.
 - Seen: 2026-10-08, cdt-drift-analysis.
+
+## L16. Codex plugin hooks fail with `node: command not found`   [who: claude] [area: claude-code env]
+- Problem: SessionStart:clear hook error `/bin/sh: node: command not found` (Codex plugin hooks run `node ...`).
+- Cause (verified): node comes only from nvm, loaded in `~/.bash_profile`; the Claude Code process PATH has `~/.local/bin` but no nvm dir, and hooks run via `/bin/sh` with that PATH.
+- Fix: `ln -s ~/.nvm/versions/node/v24.21.0/bin/node ~/.local/bin/node`; hook script exits 0 under a minimal PATH.
+- Prevent: the link pins v24.21.0; after `nvm install`/removing that version, re-point the link. Any tool a hook needs must be on the Claude process PATH, not only in shell rc files.
+- Seen: 2026-10-08, after /clear.
