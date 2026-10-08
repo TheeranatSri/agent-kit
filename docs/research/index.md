@@ -14,6 +14,8 @@ verified for our setup. Prompts used for Codex runs are in `prompts/` so a run c
 - [WikiSkill](wikiskill.md): skills that carry their purpose and origin.
 - [io-log storage](io-log-storage.md): JSONL vs SQLite, measured on the real log (Decision io-log-store = B).
 - [Context tools, open source](context-tools-oss.md): 15 tools that cut tokens / manage context (RTK, Context Mode,
-  Claude-Mem, Typesense, Tessl, Tabby, Tapes...), free vs paid, top 3 ideas to copy. "type safe" not identified yet.
+  Claude-Mem, Typesense, Tessl, Tabby, Tapes...), free vs paid, top 3 ideas to copy.
 - [Mods vs other mechanisms](mods-vs-mechanisms.md): what a Claude Code mod can do for context vs settings hooks,
   skills, subagents, MCP, harness, scripts (Claude and Codex); 7 ranked candidates for our setup.
+- [TypeSafe AI](typesafe-ai.md): Jev typed decision API (paid, $0.042/M input) with MIT SDKs/skill; community
+  Fast Jev Compaction mod prunes tool call/result pairs at 60% context; what to use, copy or skip for our harness.
