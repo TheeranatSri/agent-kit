@@ -30,9 +30,13 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 3. Put the generic `/handoff` skill and SessionStart / SessionEnd hooks (now in npd-comparables `.claude/`) into
    `agent-kit/project-template/`; npd keeps its own copy.
 4. Knowledge wiki (Proposal knowledge-wiki-v2, awaiting user A/B): index.md + log.md in notebooks/knowledge (no file moves), CLAUDE.md rule, /wiki skill (ingest/query/lint), mod /note + status line; generic, template in the kit.
-5. After each change: tests, `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
+5. Agent brain (Proposal agent-brain, awaiting A/B): shared skills in agent-kit/skills linked into ~/.claude/skills and ~/.codex/skills; close the lesson loop (each lesson names the skill/check it changed, count Seen-again); harness --worker codex|claude + ORCHESTRATOR skill; then triangulate, 4-level requests, planning round + budget. Write docs/design.md first.
+6. After each change: tests, `/reload-plugins`, `./sync-from-this-machine.sh`, commit here.
 
 ## Decisions
+
+- Decision: models | Choice: Claude + Codex only for now (the two the user uses); design stays role-agnostic so either can orchestrate or work | By: user
+- Decision: worker-network | Proposed: request -> human approve -> harness fetches (4 risk levels), plus a planning round + per-job data budget; awaiting user
 
 - Decision: separate-kit-npd | Choice: A (move tooling entries out of the npd session log into this file) | By: user
 - Decision: transport | Choice: GitHub private repo, user pushes | By: user
