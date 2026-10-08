@@ -18,6 +18,16 @@ Research behind it: `docs/research/llm-wiki.md`, `docs/research/orca.md`, `docs/
   with a short review packet the user can read in a few minutes (what changed, why, a plain-language walk through
   the new code, numbers and checks); no new round starts before the user reviewed the last one; parallel agents
   are for independent reading / research, and their results arrive as one summary, not as a stream.
+- **Understanding is the product (user, 2026-10-08).** The heart of data science / analytics is that the user can
+  answer why: the BU question behind the numbers, where the data comes from (table, version, filters, grain, gaps),
+  why this model or statistic and not another (assumptions, fit to this data, how it fails), whether the result is
+  good and how strong the evidence is. The same holds for research and for every agent proposal. So:
+  every choice is explained as a comparison (chosen option, alternatives considered, why this fits this data / BU,
+  weak points), never a bare "Recommend: A"; each review packet has an understanding section in this order:
+  BU context -> data source and scope (Check source / scope) -> method and why (Check method) -> result and strength
+  of evidence (Check result) -> the new code in plain language; research notes end with "what this means for us",
+  separating verified from hypothesis and naming where to doubt it; no new round while the user cannot yet explain
+  the last one: a gap in understanding is open work, not something to skip.
 - **Roles are per job, not per model.** Any model can orchestrate or work: Claude Code, Codex CLI today; Gemini
   CLI or others later through an adapter. Nothing in the kit assumes "Claude orchestrates, Codex works".
   **Decided** (user): Claude + Codex now, design stays open for Gemini.

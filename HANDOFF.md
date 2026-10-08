@@ -58,6 +58,7 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 ## Decisions
 
 - Decision: human-pace | Choice: the harness keeps a pace the user can follow (one active job by default, short review packets that explain the new code, no new round before review); speed is a setting, not the goal | By: user | Note: design.md section 0
+- Decision: understanding-first | Choice: results count only when the user can explain them (BU context, data source, method choice and fit, strength of evidence, the code); choices explained as comparisons; review packets carry an understanding section | By: user | Note: design.md section 0
 - Decision: objective | Choice: 1) context size, 2) subscription quota; total tokens / money after | By: user
 - Decision: skill-sets | Choice: B (each set a local Claude plugin enabled per project; per-set links for Codex) | By: user
 - Decision: work-order | Choice: 1) access / network per job in harness 2) --worker claude 3) bounded review packets 4) io-log index (scope approved, job io-index) | By: user
