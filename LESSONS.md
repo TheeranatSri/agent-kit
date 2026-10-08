@@ -84,3 +84,12 @@ Entry format (keep each under ~8 lines):
 - Fix: told the user, asked whether to keep / update / remove.
 - Prevent: propose new persistent artifacts (skills, global config) before creating them.
 - Seen: 2026-10-08.
+
+## L11. Backticks in an unquoted heredoc ran as commands   [who: claude] [area: process]
+- Problem: text written through `python3 - <<EOF` lost its backticked paths; the shell tried to run them
+  ("Permission denied", "No such file or directory").
+- Cause: an unquoted heredoc delimiter lets the shell do command substitution on backticks.
+- Fix: repaired the two files by hand edit.
+- Prevent: quote the delimiter (`<<'EOF'`) whenever the body contains backticks or `$`; read the shell's stderr
+  even when the script prints "ok".
+- Seen: 2026-10-08, handoff rule edit.
