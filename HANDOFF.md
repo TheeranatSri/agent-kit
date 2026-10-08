@@ -7,7 +7,9 @@ with `./sync-from-this-machine.sh`, then commit here.
 
 ## Status (rewrite in place)
 
-2026-10-08 ~15:30. Kit built and committed (no push yet: SSH keys made, user adds them on GitHub / may regenerate
+2026-10-08 evening. docs/design.md reviewed and decided. Next: step 2 (shared skills in agent-kit/skills, linked for Claude and Codex, test with Codex) in a NEW session.
+
+(previous) 2026-10-08 ~15:30. Kit built and committed (no push yet: SSH keys made, user adds them on GitHub / may regenerate
 them). Next: mod changes driven by use cases found while working in npd-comparables.
 
 ## Done
@@ -37,7 +39,9 @@ them). Next: mod changes driven by use cases found while working in npd-comparab
 ## Decisions
 
 - Decision: models | Choice: Claude + Codex only for now (the two the user uses); design stays role-agnostic so either can orchestrate or work | By: user
-- Decision: worker-network | Proposed: request -> human approve -> harness fetches (4 risk levels), plus a planning round + per-job data budget; awaiting user
+- Decision: worker-network | Choice: approved (requests in 4 levels, planning round + per-job budget); access is set per job scope, not per model | By: user
+- Decision: caps | Choice: CLAUDE.md / AGENTS.md <= 120 lines, skill description <= 300 chars | By: user
+- Decision: triangulation | Choice: no tolerance; user reviews both results side by side | By: user
 
 - Decision: separate-kit-npd | Choice: A (move tooling entries out of the npd session log into this file) | By: user
 - Decision: transport | Choice: GitHub private repo, user pushes | By: user

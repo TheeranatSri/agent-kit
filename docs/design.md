@@ -1,6 +1,6 @@
 # agent-kit design: multi-model work for data analytics, with a human review loop
 
-Status: draft for user review (2026-10-08). Decisions so far are marked **Decided**; the rest are proposals.
+Status: reviewed by the user 2026-10-08 (sections 5, caps, triangulation decided). Decisions so far are marked **Decided**; the rest are proposals.
 Research behind it: `docs/research/llm-wiki.md`, `docs/research/orca.md`, `docs/research/wikiskill.md`.
 
 ## 0. Principles
@@ -81,12 +81,13 @@ agent-kit/
 
 - **metrics.json**: every job states its key numbers (name -> value -> how computed -> source file).
 - **Triangulate mode** (opt-in): the same task to two workers (e.g. Claude and Codex) independently; the harness
-  diffs metrics.json; disagreements beyond a tolerance top the review packet.
+  shows both metrics.json side by side with the differences; no automatic tolerance or pass/fail: the user reviews
+  the numbers and decides (Decided, user 2026-10-08).
 - **Check ledger**: the review packet tabulates all `Check:` / `Claim:` lines; a `Pass: no`, or a hypothesis used as
   a conclusion, blocks accept until the user confirms.
 - **Wiki hook**: an accepted job adds a `result` entry to the project `log.md`; SQL run for real goes to the cookbook.
 
-## 5. Network and data requests (Proposal worker-network, awaiting user)
+## 5. Network and data requests (Decided, user 2026-10-08)
 
 Workers never touch the network. They end a round with `needs_input` + `requests`; the orchestrator summarises;
 the user approves; the harness fetches and stores files with a manifest (url / query, time, hash); the worker
@@ -142,8 +143,8 @@ max GB) lets the orchestrator approve level-3 requests inside it and report afte
 | 6 | requests (4 levels) + planning round + budget | low | data access |
 | 7 | triangulate mode, worktrees, status mod | medium | speed / confidence |
 
-## 7. Open questions for the user
+## 7. Decisions on the open questions (user, 2026-10-08)
 
-1. worker-network: approve section 5 (requests, 4 levels, planning round + budget)?
-2. Caps: proposed CLAUDE.md <= 120 lines, AGENTS.md <= 120, skill description <= 300 characters. OK?
-3. Triangulation tolerance default (e.g. 0.5% relative, exact for counts)?
+1. worker-network: section 5 approved (requests in 4 levels, planning round + per-job budget); access per job scope (5.1).
+2. Caps: CLAUDE.md <= 120 lines, AGENTS.md <= 120 lines, skill description <= 300 characters (checked by script).
+3. Triangulation: no numeric tolerance; side-by-side numbers for the user to review.
